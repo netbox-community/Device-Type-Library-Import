@@ -26,6 +26,7 @@ git clone https://github.com/minitriga/Netbox-Device-Type-Library-Import.git
 Installing the requirements
 
 ```
+cd Netbox-Device-Type-Library-Import
 pip install -r requirements.txt
 ```
 
