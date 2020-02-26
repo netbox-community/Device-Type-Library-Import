@@ -1,9 +1,5 @@
 from git import Repo, exc, RemoteProgress
-import os
-import argparse
-import glob
-import yaml
-import pynetbox
+import yaml, pynetbox, glob, argparse, os, settings
 
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
 parser.add_argument('--vendor', nargs='+')
@@ -12,8 +8,8 @@ args = parser.parse_args()
 
 cwd = os.getcwd()
 url = 'https://github.com/netbox-community/devicetype-library.git'
-nbUrl = 'http://192.168.3.119'
-nbToken = '0123456789abcdef0123456789abcdef01234567'
+nbUrl = settings.NETBOX_URL
+nbToken = settings.NETBOX_TOKEN
 
 def update_package(path: str):
     try:
@@ -243,13 +239,12 @@ nb = pynetbox.api(nbUrl, token=nbToken)
 if args.vendor is None:
     print("No Vendor Specified, Gathering All Device-Types")  
     files, vendors = getFiles()
-    deviceTypes = readYAMl(files)
-    print(vendors)
-    createManufacturers(vendors, nb)
-    createDeviceTypes(deviceTypes, nb)
-    # print(json)
     print(str(len(vendors)) + " Vendors Found")
     print(str(len(files)) + " Device-Types Found") 
+    deviceTypes = readYAMl(files)
+    createManufacturers(vendors, nb)
+    createDeviceTypes(deviceTypes, nb)
+
 else:
     print("Vendor Specified, Gathering All Matching Device-Types")
     files, vendors = getFiles(args.vendor)

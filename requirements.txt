@@ -1,0 +1,13 @@
+certifi==2019.11.28
+chardet==3.0.4
+gitdb2==3.0.2
+GitPython==3.0.8
+idna==2.8
+progressbar2==3.47.0
+pynetbox==4.2.5
+python-utils==2.3.0
+PyYAML==5.3
+requests==2.22.0
+six==1.14.0
+smmap2==2.0.5
+urllib3==1.25.8
