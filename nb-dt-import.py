@@ -172,14 +172,10 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
             if poGet:
                 print(f'Power Outlet Template Exists: {poGet.name} - {poGet.type} - {poGet.device_type.id} - {poGet.id}')
             else:
-                ppGet = nb.dcim.power_port_templates.get(devicetype_id=deviceType, name=poweroutlet["power_port"])
+                ppGet = nb.dcim.power_port_templates.get(devicetype_id=deviceType)
                 if ppGet:
-                    poweroutlet["power_port"] = {}
-                    poweroutlet["power_port"]['name'] = ppGet.name
-                    poweroutlet["power_port"]["device_type"] = dict(ppGet.device_type)
-                    print(dict(ppGet.device_type))
-                    print(poweroutlet)
-                    exit()
+                    poweroutlet["power_port"] = ppGet.id
+                    poweroutlet["device_type"] = deviceType
                     poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
                     print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
         except pynetbox.RequestError as e:
@@ -195,6 +191,8 @@ def createDeviceTypes(deviceTypes, nb):
                     createInterfaces(deviceType["interfaces"], dtGet.id, nb)
                 if "power-ports" in deviceType:
                     createPowerPorts(deviceType["power-ports"], dtGet.id, nb)
+                if "power-port" in deviceType:
+                    createPowerPorts(deviceType["power-port"], dtGet.id, nb)
                 if "console-ports" in deviceType:
                     createConsolePorts(deviceType["console-ports"], dtGet.id, nb)
                 if "power-outlets" in deviceType:
@@ -212,7 +210,7 @@ def createDeviceTypes(deviceTypes, nb):
                 print(f'Device Type Created: {dtSuccess.manufacturer.name} - {dtSuccess.model} - {dtSuccess.id}')
                 if "interfaces" in deviceType:
                     createInterfaces(deviceType["interfaces"], dtSuccess.id, nb)
-                if "power-ports" in deviceType:
+                if "power-ports" in deviceType or "power-port" in deviceType:
                     createPowerPorts(deviceType["power-ports"], dtSuccess.id, nb)
                 if "console-ports" in deviceType:
                     createConsolePorts(deviceType["console-ports"], dtSuccess.id, nb)
