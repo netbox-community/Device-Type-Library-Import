@@ -1,4 +1,5 @@
 from git import Repo, exc, RemoteProgress
+from collections import Counter
 import yaml, pynetbox, glob, argparse, os, settings
 
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
@@ -7,6 +8,7 @@ parser.add_argument('--vendor', nargs='+')
 args = parser.parse_args()
 
 cwd = os.getcwd()
+counter = Counter(added=0,updated=0,manufacturer=0)
 url = 'https://github.com/netbox-community/devicetype-library.git'
 nbUrl = settings.NETBOX_URL
 nbToken = settings.NETBOX_TOKEN
@@ -64,6 +66,7 @@ def createManufacturers(vendors, nb):
             else:
                 manSuccess = nb.dcim.manufacturers.create(vendor)
                 print(f'Manufacturer Created: {manSuccess.name} - {manSuccess.id}')
+                counter.update({'manufacturer':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
@@ -77,6 +80,7 @@ def createInterfaces(interfaces, deviceType, nb):
             else:
                 ifSuccess = nb.dcim.interface_templates.create(interface)
                 print(f'Interface Template Created: {ifSuccess.name} - {ifSuccess.type} - {ifSuccess.device_type.id} - {ifSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -90,6 +94,7 @@ def createConsolePorts(consoleports, deviceType, nb):
             else:
                 cpSuccess = nb.dcim.console_port_templates.create(consoleport)
                 print(f'Console Port Created: {cpSuccess.name} - {cpSuccess.type} - {cpSuccess.device_type.id} - {cpSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -103,6 +108,7 @@ def createPowerPorts(powerports, deviceType, nb):
             else:
                 ppSuccess = nb.dcim.power_port_templates.create(powerport)
                 print(f'Power Port Created: {ppSuccess.name} - {ppSuccess.type} - {ppSuccess.device_type.id} - {ppSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -116,6 +122,7 @@ def createConsoleServerPorts(consoleserverports, deviceType, nb):
             else:
                 cspSuccess = nb.dcim.console_server_port_templates.create(csport)
                 print(f'Console Server Port Created: {cspSuccess.name} - {cspSuccess.type} - {cspSuccess.device_type.id} - {cspSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
@@ -132,6 +139,7 @@ def createFrontPorts(frontports, deviceType, nb):
                     frontport['rear_port'] = rpGet.id
                     fpSuccess = nb.dcim.front_port_templates.create(frontport)
                     print(f'Front Port Created: {fpSuccess.name} - {fpSuccess.type} - {fpSuccess.device_type.id} - {fpSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
@@ -145,6 +153,7 @@ def createRearPorts(rearports, deviceType, nb):
             else:
                 rpSuccess = nb.dcim.rear_port_templates.create(rearport)
                 print(f'Rear Port Created: {rpSuccess.name} - {rpSuccess.type} - {rpSuccess.device_type.id} - {rpSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -158,6 +167,7 @@ def createDeviceBays(devicebays, deviceType, nb):
             else:
                 dbSuccess = nb.dcim.device_bay_templates.create(devicebay)
                 print(f'Device Bay Created: {dbSuccess.name} - {dbSuccess.device_type.id} - {dbSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -174,6 +184,7 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
                     poweroutlet["device_type"] = deviceType
                     poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
                     print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
+                counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
@@ -203,6 +214,7 @@ def createDeviceTypes(deviceTypes, nb):
                     createDeviceBays(deviceType["device-bays"], dtGet.id, nb)
             else:
                 dtSuccess = nb.dcim.device_types.create(deviceType)
+                counter.update({'added':1})
                 print(f'Device Type Created: {dtSuccess.manufacturer.name} - {dtSuccess.model} - {dtSuccess.id}')
                 if "interfaces" in deviceType:
                     createInterfaces(deviceType["interfaces"], dtSuccess.id, nb)
@@ -223,7 +235,7 @@ def createDeviceTypes(deviceTypes, nb):
                 if "device-bays" in deviceType:
                     createDeviceBays(deviceType["device-bays"], dtSuccess.id, nb)
         except pynetbox.RequestError as e:
-            print(e.error) 
+            print(e.error)
 
 try:
     if os.path.isdir('./repo'):
@@ -239,10 +251,10 @@ except exc.GitCommandError as error:
 nb = pynetbox.api(nbUrl, token=nbToken)
 
 if args.vendor is None:
-    print("No Vendor Specified, Gathering All Device-Types")  
+    print("No Vendor Specified, Gathering All Device-Types")
     files, vendors = getFiles()
     print(str(len(vendors)) + " Vendors Found")
-    print(str(len(files)) + " Device-Types Found") 
+    print(str(len(files)) + " Device-Types Found")
     deviceTypes = readYAMl(files)
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
@@ -255,12 +267,8 @@ else:
     deviceTypes = readYAMl(files)
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
-     
-    
 
-
-
-
-
-
-
+print('---')
+print('{} devices created'.format(counter['added']))
+print('{} interfaces/ports updated'.format(counter['updated']))
+print('{} manufacturers created'.format(counter['manufacturer']))
