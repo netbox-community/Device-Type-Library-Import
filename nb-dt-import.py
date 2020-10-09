@@ -206,8 +206,10 @@ def createDeviceTypes(deviceTypes, nb):
                 print(f'Device Type Created: {dtSuccess.manufacturer.name} - {dtSuccess.model} - {dtSuccess.id}')
                 if "interfaces" in deviceType:
                     createInterfaces(deviceType["interfaces"], dtSuccess.id, nb)
-                if "power-ports" in deviceType or "power-port" in deviceType:
+                if "power-ports" in deviceType:
                     createPowerPorts(deviceType["power-ports"], dtSuccess.id, nb)
+                if "power-port" in deviceType:
+                    createPowerPorts(deviceType["power-port"], dtSuccess.id, nb)
                 if "console-ports" in deviceType:
                     createConsolePorts(deviceType["console-ports"], dtSuccess.id, nb)
                 if "power-outlets" in deviceType:

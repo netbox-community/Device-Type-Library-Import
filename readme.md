@@ -2,7 +2,7 @@
 
 This library is intended to be your friend and help you import all the device-types defined within the the [NetBox Device Type Library Repository](https://github.com/netbox-community/devicetype-library).
 
-> This currently only works on NetBox v2.7.8.
+> Tested working with 2.7.8 and 2.8.8
 
 ## Getting Started
 
