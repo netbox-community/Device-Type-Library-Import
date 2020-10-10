@@ -4,6 +4,7 @@ import yaml, pynetbox, glob, argparse, os, settings
 
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
 parser.add_argument('--vendor', nargs='+')
+parser.add_argument('--nosslverify', default=False, action="store_true")
 
 args = parser.parse_args()
 
@@ -178,12 +179,13 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
             if poGet:
                 print(f'Power Outlet Template Exists: {poGet.name} - {poGet.type} - {poGet.device_type.id} - {poGet.id}')
             else:
-                ppGet = nb.dcim.power_port_templates.get(devicetype_id=deviceType)
-                if ppGet:
-                    poweroutlet["power_port"] = ppGet.id
-                    poweroutlet["device_type"] = deviceType
-                    poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
-                    print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
+                if "power_port" in poweroutlet:
+                    ppGet = nb.dcim.power_port_templates.get(name=poweroutlet["power_port"], devicetype_id=deviceType)
+                    if ppGet:
+                        poweroutlet["power_port"] = ppGet.id
+                poweroutlet["device_type"] = deviceType
+                poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
+                print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
                 counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
@@ -249,6 +251,8 @@ except exc.GitCommandError as error:
     print("Couldn't clone {} ({})".format(url, error))
 
 nb = pynetbox.api(nbUrl, token=nbToken)
+if args.nosslverify:
+    nb.http_session.verify = False
 
 if args.vendor is None:
     print("No Vendor Specified, Gathering All Device-Types")
