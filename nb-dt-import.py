@@ -185,9 +185,12 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
                         poweroutlet["device_type"] = deviceType
                         poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
                         print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
-                    counter.update({'updated':1})
+                        counter.update({'updated':1})
                 except:
-                    print(f'Error assining Power Port to Power Outlet in Outlet: {poweroutlet["name"]}')
+                    poweroutlet["device_type"] = deviceType
+                    poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
+                    print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
+                    counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
