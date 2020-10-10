@@ -58,11 +58,11 @@ This script currently accepts vendors so that only a few vendors are imported in
 This can be done the following.
 
 ```
-python nb-dt-import.py --vendors apc
+python nb-dt-import.py --vendor apc
 ```
 
-`--vendors` also accepts a list of vendors so that multiple vendors could be imported. 
+`--vendor` also accepts a list of vendors so that multiple vendors could be imported. 
 
 ```
-python nb-dt-import.py --vendors apc juniper
+python nb-dt-import.py --vendor apc juniper
 ```
