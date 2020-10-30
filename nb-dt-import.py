@@ -178,13 +178,19 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
             if poGet:
                 print(f'Power Outlet Template Exists: {poGet.name} - {poGet.type} - {poGet.device_type.id} - {poGet.id}')
             else:
-                ppGet = nb.dcim.power_port_templates.get(devicetype_id=deviceType)
-                if ppGet:
-                    poweroutlet["power_port"] = ppGet.id
+                try:
+                    ppGet = nb.dcim.power_port_templates.get(devicetype_id=deviceType)
+                    if ppGet:
+                        poweroutlet["power_port"] = ppGet.id
+                        poweroutlet["device_type"] = deviceType
+                        poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
+                        print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
+                        counter.update({'updated':1})
+                except:
                     poweroutlet["device_type"] = deviceType
                     poSuccess = nb.dcim.power_outlet_templates.create(poweroutlet)
                     print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
-                counter.update({'updated':1})
+                    counter.update({'updated':1})
         except pynetbox.RequestError as e:
             print(e.error) 
 
