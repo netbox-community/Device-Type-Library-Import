@@ -17,7 +17,7 @@ def update_package(path: str):
         repo = Repo(path)
         if repo.remotes.origin.url.endswith('.git'):
             repo.remotes.origin.pull()
-            print("Pulled Repo")
+            print(f"Pulled Repo {repo.remotes.origin.url}")
     except exc.InvalidGitRepositoryError:
         pass
 
@@ -245,12 +245,11 @@ def createDeviceTypes(deviceTypes, nb):
 
 try:
     if os.path.isdir('./repo'):
-        msg = 'Package devicetype-library is already installed, updating'
+        print(f"Package devicetype-library is already installed, updating {os.path.join(cwd, 'repo')}")
         update_package('./repo')
-        print(msg)
     else:
         repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'))
-        print("Package Installed")
+        print(f"Package Installed {repo.remotes.origin.url}")
 except exc.GitCommandError as error:
     print("Couldn't clone {} ({})".format(args.url, error))
 
