@@ -48,6 +48,7 @@ def readYAMl(files):
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
+                return deviceTypes
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
