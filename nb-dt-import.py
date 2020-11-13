@@ -3,13 +3,12 @@ from collections import Counter
 import yaml, pynetbox, glob, argparse, os, settings
 
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
-parser.add_argument('--vendor', nargs='+')
-
+parser.add_argument('--vendor', nargs='+', help="List of vendors to import eg. apc cisco")
+parser.add_argument('--url','--git', default='https://github.com/netbox-community/devicetype-library.git', help="Git URL with valid Device Type YAML files")
 args = parser.parse_args()
 
 cwd = os.getcwd()
 counter = Counter(added=0,updated=0,manufacturer=0)
-url = 'https://github.com/netbox-community/devicetype-library.git'
 nbUrl = settings.NETBOX_URL
 nbToken = settings.NETBOX_TOKEN
 
@@ -18,7 +17,7 @@ def update_package(path: str):
         repo = Repo(path)
         if repo.remotes.origin.url.endswith('.git'):
             repo.remotes.origin.pull()
-            print("Pulled Repo")
+            print(f"Pulled Repo {repo.remotes.origin.url}")
     except exc.InvalidGitRepositoryError:
         pass
 
@@ -49,10 +48,11 @@ def readYAMl(files):
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
+                continue
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
-            data['manufacturer']['slug'] = manufacturer.lower()
+            data['manufacturer']['slug'] = manufacturer.lower().replace(" ", "")
         deviceTypes.append(data)
         manufacturers.append(manufacturer)
     return deviceTypes
@@ -245,14 +245,13 @@ def createDeviceTypes(deviceTypes, nb):
 
 try:
     if os.path.isdir('./repo'):
-        msg = 'Package devicetype-library is already installed, updating'
+        print(f"Package devicetype-library is already installed, updating {os.path.join(cwd, 'repo')}")
         update_package('./repo')
-        print(msg)
     else:
-        repo = Repo.clone_from(url, os.path.join(cwd, 'repo'))
-        print("Package Installed")
+        repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'))
+        print(f"Package Installed {repo.remotes.origin.url}")
 except exc.GitCommandError as error:
-    print("Couldn't clone {} ({})".format(url, error))
+    print("Couldn't clone {} ({})".format(args.url, error))
 
 nb = pynetbox.api(nbUrl, token=nbToken)
 
