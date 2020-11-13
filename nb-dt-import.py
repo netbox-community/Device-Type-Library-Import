@@ -52,7 +52,7 @@ def readYAMl(files):
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
-            data['manufacturer']['slug'] = manufacturer.lower()
+            data['manufacturer']['slug'] = manufacturer.lower().replace(" ", "")
         deviceTypes.append(data)
         manufacturers.append(manufacturer)
     return deviceTypes
