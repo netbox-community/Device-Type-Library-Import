@@ -4,6 +4,7 @@ import yaml, pynetbox, glob, argparse, os, settings
 
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
 parser.add_argument('--vendor', nargs='+', help="List of vendors to import eg. apc cisco")
+parser.add_argument('--part_number', nargs='+', help="List of part_number to import eg. asa5505")
 parser.add_argument('--url','--git', default='https://github.com/netbox-community/devicetype-library.git', help="Git URL with valid Device Type YAML files")
 args = parser.parse_args()
 
@@ -24,19 +25,15 @@ def update_package(path: str):
 def getFiles(vendors=None):
     files = []
     discoveredVendors = []
-    if vendors:
-        for r, d, f in os.walk('./repo/device-types/'):
+    for r, d, f in os.walk('./repo/device-types/'):
             for folder in d:
-                for vendor in vendors:
-                    if vendor.lower() == folder.lower():
-                        discoveredVendors.append({'name': folder, 'slug': folder.lower()})
-                        files.extend(glob.glob('./repo/device-types/' + folder + '/*.yaml'))
-    else:
-        for r, d, f in os.walk('./repo/device-types/'):
-            for folder in d:
-                if folder.lower() != "Testing":
-                    discoveredVendors.append({'name': folder, 'slug': folder.lower()})
-        files.extend(glob.glob('./repo/device-types/[!Testing]*/*.yaml'))
+                if (vendors is None or folder.upper() in vendors):
+                        discoveredVendors.append({'name': folder, 'slug': folder.lower().replace(" ", "")})
+                        if args.part_number is None:
+                            files.extend(glob.glob('./repo/device-types/' + folder + '/*.yaml'))
+                        else:
+                            for part in args.part_number:
+                                 files.extend(glob.glob('./repo/device-types/' + folder + '/' + part + '.yaml'))
     return files, discoveredVendors
 
 def readYAMl(files):
@@ -68,7 +65,7 @@ def createManufacturers(vendors, nb):
                 print(f'Manufacturer Created: {manSuccess.name} - {manSuccess.id}')
                 counter.update({'manufacturer':1})
         except pynetbox.RequestError as e:
-            print(e.error) 
+            print(e.error)
 
 def createInterfaces(interfaces, deviceType, nb):
     for interface in interfaces:
@@ -124,7 +121,7 @@ def createConsoleServerPorts(consoleserverports, deviceType, nb):
                 print(f'Console Server Port Created: {cspSuccess.name} - {cspSuccess.type} - {cspSuccess.device_type.id} - {cspSuccess.id}')
                 counter.update({'updated':1})
         except pynetbox.RequestError as e:
-            print(e.error) 
+            print(e.error)
 
 def createFrontPorts(frontports, deviceType, nb):
     for frontport in frontports:
@@ -141,7 +138,7 @@ def createFrontPorts(frontports, deviceType, nb):
                     print(f'Front Port Created: {fpSuccess.name} - {fpSuccess.type} - {fpSuccess.device_type.id} - {fpSuccess.id}')
                 counter.update({'updated':1})
         except pynetbox.RequestError as e:
-            print(e.error) 
+            print(e.error)
 
 def createRearPorts(rearports, deviceType, nb):
     for rearport in rearports:
@@ -192,54 +189,37 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
                     print(f'Power Outlet Created: {poSuccess.name} - {poSuccess.type} - {poSuccess.device_type.id} - {poSuccess.id}')
                     counter.update({'updated':1})
         except pynetbox.RequestError as e:
-            print(e.error) 
+            print(e.error)
 
 def createDeviceTypes(deviceTypes, nb):
     for deviceType in deviceTypes:
         try:
+            createManufacturers(vendors, nb)
             dtGet = nb.dcim.device_types.get(model=deviceType["model"])
             if dtGet:
                 print(f'Device Type Exists: {dtGet.manufacturer.name} - {dtGet.model} - {dtGet.id}')
-                if "interfaces" in deviceType:
-                    createInterfaces(deviceType["interfaces"], dtGet.id, nb)
-                if "power-ports" in deviceType:
-                    createPowerPorts(deviceType["power-ports"], dtGet.id, nb)
-                if "power-port" in deviceType:
-                    createPowerPorts(deviceType["power-port"], dtGet.id, nb)
-                if "console-ports" in deviceType:
-                    createConsolePorts(deviceType["console-ports"], dtGet.id, nb)
-                if "power-outlets" in deviceType:
-                    createPowerOutlets(deviceType["power-outlets"], dtGet.id, nb)
-                if "console-server-ports" in deviceType:
-                    createConsoleServerPorts(deviceType["console-server-ports"], dtGet.id, nb)
-                if "rear-ports" in deviceType:
-                    createRearPorts(deviceType["rear-ports"], dtGet.id, nb)
-                if "front-ports" in deviceType:
-                    createFrontPorts(deviceType["front-ports"], dtGet.id, nb)
-                if "device-bays" in deviceType:
-                    createDeviceBays(deviceType["device-bays"], dtGet.id, nb)
             else:
-                dtSuccess = nb.dcim.device_types.create(deviceType)
+                dtGet = nb.dcim.device_types.create(deviceType)
                 counter.update({'added':1})
-                print(f'Device Type Created: {dtSuccess.manufacturer.name} - {dtSuccess.model} - {dtSuccess.id}')
-                if "interfaces" in deviceType:
-                    createInterfaces(deviceType["interfaces"], dtSuccess.id, nb)
-                if "power-ports" in deviceType:
-                    createPowerPorts(deviceType["power-ports"], dtSuccess.id, nb)
-                if "power-port" in deviceType:
-                    createPowerPorts(deviceType["power-port"], dtSuccess.id, nb)
-                if "console-ports" in deviceType:
-                    createConsolePorts(deviceType["console-ports"], dtSuccess.id, nb)
-                if "power-outlets" in deviceType:
-                    createPowerOutlets(deviceType["power-outlets"], dtSuccess.id, nb)
-                if "console-server-ports" in deviceType:
-                    createConsoleServerPorts(deviceType["console-server-ports"], dtSuccess.id, nb)
-                if "rear-ports" in deviceType:
-                    createRearPorts(deviceType["rear-ports"], dtSuccess.id, nb)
-                if "front-ports" in deviceType:
-                    createFrontPorts(deviceType["front-ports"], dtSuccess.id, nb)
-                if "device-bays" in deviceType:
-                    createDeviceBays(deviceType["device-bays"], dtSuccess.id, nb)
+                print(f'Device Type Created: {dtGet.manufacturer.name} - {dtGet.model} - {dtGet.id}')
+            if "interfaces" in deviceType:
+                createInterfaces(deviceType["interfaces"], dtGet.id, nb)
+            if "power-ports" in deviceType:
+                createPowerPorts(deviceType["power-ports"], dtGet.id, nb)
+            if "power-port" in deviceType:
+                createPowerPorts(deviceType["power-port"], dtGet.id, nb)
+            if "console-ports" in deviceType:
+                createConsolePorts(deviceType["console-ports"], dtGet.id, nb)
+            if "power-outlets" in deviceType:
+                createPowerOutlets(deviceType["power-outlets"], dtGet.id, nb)
+            if "console-server-ports" in deviceType:
+                createConsoleServerPorts(deviceType["console-server-ports"], dtGet.id, nb)
+            if "rear-ports" in deviceType:
+                createRearPorts(deviceType["rear-ports"], dtGet.id, nb)
+            if "front-ports" in deviceType:
+               createFrontPorts(deviceType["front-ports"], dtGet.id, nb)
+            if "device-bays" in deviceType:
+                createDeviceBays(deviceType["device-bays"], dtGet.id, nb)
         except pynetbox.RequestError as e:
             print(e.error)
 
@@ -258,20 +238,14 @@ nb = pynetbox.api(nbUrl, token=nbToken)
 if args.vendor is None:
     print("No Vendor Specified, Gathering All Device-Types")
     files, vendors = getFiles()
-    print(str(len(vendors)) + " Vendors Found")
-    print(str(len(files)) + " Device-Types Found")
-    deviceTypes = readYAMl(files)
-    createManufacturers(vendors, nb)
-    createDeviceTypes(deviceTypes, nb)
-
 else:
     print("Vendor Specified, Gathering All Matching Device-Types")
-    files, vendors = getFiles(args.vendor)
-    print(str(len(vendors)) + " Vendors Found")
-    print(str(len(files)) + " Device-Types Found")
-    deviceTypes = readYAMl(files)
-    createManufacturers(vendors, nb)
-    createDeviceTypes(deviceTypes, nb)
+    files, vendors = getFiles([x.upper() for x in args.vendor])
+
+print(str(len(vendors)) + " Vendors Found")
+print(str(len(files)) + " Device-Types Found")
+deviceTypes = readYAMl(files)
+createDeviceTypes(deviceTypes, nb)
 
 print('---')
 print('{} devices created'.format(counter['added']))
