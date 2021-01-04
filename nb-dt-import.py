@@ -27,7 +27,8 @@ def getFiles(vendors=None):
     discoveredVendors = []
     for r, d, f in os.walk('./repo/device-types/'):
             for folder in d:
-                if (vendors is None or folder.upper() in vendors):
+                if folder.lower() != 'testing':
+                    if (vendors is None or folder.upper() in vendors):
                         discoveredVendors.append({'name': folder, 'slug': folder.lower().replace(" ", "")})
                         if args.part_number is None:
                             files.extend(glob.glob('./repo/device-types/' + folder + '/*.yaml'))
