@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from git import Repo, exc, RemoteProgress
 from collections import Counter
 import yaml

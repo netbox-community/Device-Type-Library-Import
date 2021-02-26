@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 NETBOX_URL = str(os.getenv("NETBOX_URL"))
 NETBOX_TOKEN = str(os.getenv("NETBOX_TOKEN"))
