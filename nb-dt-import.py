@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from git import Repo, exc, RemoteProgress
 from collections import Counter
+from datetime import datetime
 import yaml
 import pynetbox
 import glob
@@ -8,7 +9,7 @@ import argparse
 import os
 import settings
 
-REPO_URL = 'https://github.com/netbox-community/devicetype-library.git'
+REPO_URL = settings.REPO_URL
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
 parser.add_argument('--vendor', nargs='+',
                     help="List of vendors to import eg. apc cisco")
@@ -20,6 +21,7 @@ cwd = os.getcwd()
 counter = Counter(added=0, updated=0, manufacturer=0)
 nbUrl = settings.NETBOX_URL
 nbToken = settings.NETBOX_TOKEN
+startTime = datetime.now()
 
 
 def update_package(path: str):
@@ -358,6 +360,8 @@ else:
     createDeviceTypes(deviceTypes, nb)
 
 print('---')
+print('Script took {} to run'.format(datetime.now() - startTime))
 print('{} devices created'.format(counter['added']))
 print('{} interfaces/ports updated'.format(counter['updated']))
 print('{} manufacturers created'.format(counter['manufacturer']))
+
