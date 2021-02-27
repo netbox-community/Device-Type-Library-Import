@@ -8,7 +8,7 @@ This library is intended to be your friend and help you import all the device-ty
 
 These instructions will clone a copy of the `netbox-community/devicetype-library` repository to your machine to allow you to import the device types you would like without copy and pasting them into the NetBox UI.
 
-### 🚀 Getting Started
+## 🚀 Getting Started
 
 1. This script is written in Python, so lets setup a virtual environment.
 
@@ -36,7 +36,7 @@ vim .env
 
 Finally, we are able to execute the script and import some device templates!
 
-### 🔌 Usage
+## 🔌 Usage
 
 To use the script, simply execute the script as follows. Make sure you're still in the activated virtual environment we created before.
 
@@ -48,7 +48,7 @@ This will clone the latest master branch from the `netbox-community/devicetype-l
 
 Next, it will loop over every manufacturer and every device of every manufacturer and begin checking if your Netbox install already has them, and if not, creates them. It will skip preexisting manufacturers, devices, interfaces, etc. so as to not end up with duplicate entries in your Netbox instance.
 
-#### 🧰 Arguments
+### 🧰 Arguments
 
 This script currently accepts a list of vendors as an arugment, so that you can selectively import devices.
 
@@ -64,10 +64,10 @@ To import only device by APC, for example:
 ./nb-dt-import.py --vendors apc juniper
 ```
 
-### 🧑‍💻 Contributing
+## 🧑‍💻 Contributing
 
 We're happy about any pull requests!
 
-### 📜 License
+## 📜 License
 
 MIT
