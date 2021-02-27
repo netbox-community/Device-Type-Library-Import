@@ -6,7 +6,7 @@ This library is intended to be your friend and help you import all the device-ty
 
 ## 🪄 Description
 
-These instructions will clone a copy of the `netbox-community/devicetype-library` repository to your machine to allow you to import the device types you would like without copy and pasting them into the NetBox UI.
+This script will clone a copy of the `netbox-community/devicetype-library` repository to your machine to allow it to import the device types you would like without copy and pasting them into the Netbox UI.
 
 ## 🚀 Getting Started
 
