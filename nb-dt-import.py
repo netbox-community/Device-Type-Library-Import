@@ -11,7 +11,7 @@ import settings
 
 REPO_URL = settings.REPO_URL
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
-parser.add_argument('--vendor', nargs='+',
+parser.add_argument('--vendors', nargs='+',
                     help="List of vendors to import eg. apc cisco")
 parser.add_argument('--url', '--git', default=REPO_URL,
                     help="Git URL with valid Device Type YAML files")
@@ -341,8 +341,8 @@ except exc.GitCommandError as error:
 
 nb = pynetbox.api(nbUrl, token=nbToken)
 
-if args.vendor is None:
-    print("No Vendor Specified, Gathering All Device-Types")
+if args.vendors is None:
+    print("No Vendors Specified, Gathering All Device-Types")
     files, vendors = getFiles()
     print(str(len(vendors)) + " Vendors Found")
     print(str(len(files)) + " Device-Types Found")
