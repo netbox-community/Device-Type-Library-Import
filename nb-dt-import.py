@@ -352,7 +352,7 @@ if args.vendors is None:
 
 else:
     print("Vendor Specified, Gathering All Matching Device-Types")
-    files, vendors = getFiles(args.vendor)
+    files, vendors = getFiles(args.vendors)
     print(str(len(vendors)) + " Vendors Found")
     print(str(len(files)) + " Device-Types Found")
     deviceTypes = readYAMl(files)
