@@ -10,8 +10,9 @@ import os
 import settings
 
 REPO_URL = settings.REPO_URL
+
 parser = argparse.ArgumentParser(description='Import Netbox Device Types')
-parser.add_argument('--vendors', nargs='+',
+parser.add_argument('--vendors', nargs='+', default=settings.VENDORS,
                     help="List of vendors to import eg. apc cisco")
 parser.add_argument('--url', '--git', default=REPO_URL,
                     help="Git URL with valid Device Type YAML files")
