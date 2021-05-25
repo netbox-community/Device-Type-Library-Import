@@ -64,6 +64,29 @@ To import only device by APC, for example:
 ./nb-dt-import.py --vendors apc juniper
 ```
 
+## Docker build
+
+It's possible to use this project as a docker container. 
+
+To build : 
+
+```
+docker build -t netbox-devicetype-import-library .
+```
+
+The container supports the following env var as configuration : 
+
+- `REPO_URL`, the repo to look for device types (defaults to _https://github.com/netbox-community/devicetype-library.git_)
+- `NETBOX_URL`, used to access netbox
+- `NETBOX_TOKEN`, token for accessing netbox
+- `VENDORS`, a space-separated list of vendors to import (defaults to None)
+
+To run : 
+
+```
+docker run -e "NETBOX_URL=http://netbox:8080/" -e "NETBOX_TOKEN=98765434567890" netbox-devicetype-import-library
+```
+
 ## 🧑‍💻 Contributing
 
 We're happy about any pull requests!
