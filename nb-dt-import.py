@@ -9,20 +9,8 @@ import argparse
 import os
 import settings
 
-REPO_URL = settings.REPO_URL
 
-parser = argparse.ArgumentParser(description='Import Netbox Device Types')
-parser.add_argument('--vendors', nargs='+', default=settings.VENDORS,
-                    help="List of vendors to import eg. apc cisco")
-parser.add_argument('--url', '--git', default=REPO_URL,
-                    help="Git URL with valid Device Type YAML files")
-args = parser.parse_args()
-
-cwd = os.getcwd()
 counter = Counter(added=0, updated=0, manufacturer=0)
-nbUrl = settings.NETBOX_URL
-nbToken = settings.NETBOX_TOKEN
-startTime = datetime.now()
 
 
 def update_package(path: str):
@@ -329,40 +317,65 @@ def createDeviceTypes(deviceTypes, nb):
             print(e.error)
 
 
-try:
-    if os.path.isdir('./repo'):
-        print(f"Package devicetype-library is already installed, "
-              + f"updating {os.path.join(cwd, 'repo')}")
-        update_package('./repo')
+def main():
+
+    cwd = os.getcwd()
+    startTime = datetime.now()
+
+    nbUrl = settings.NETBOX_URL
+    nbToken = settings.NETBOX_TOKEN
+    nb = pynetbox.api(nbUrl, token=nbToken)
+
+    if settings.IGNORE_SSL_ERRORS:
+        import requests
+        requests.packages.urllib3.disable_warnings()
+        session = requests.Session()
+        session.verify = False
+        nb.http_session = session
+
+
+    VENDORS = settings.VENDORS
+    REPO_URL = settings.REPO_URL
+
+    parser = argparse.ArgumentParser(description='Import Netbox Device Types')
+    parser.add_argument('--vendors', nargs='+', default=VENDORS,
+                        help="List of vendors to import eg. apc cisco")
+    parser.add_argument('--url', '--git', default=REPO_URL,
+                        help="Git URL with valid Device Type YAML files")
+    args = parser.parse_args()
+
+
+    try:
+        if os.path.isdir('./repo'):
+            print(f"Package devicetype-library is already installed, "
+                  + f"updating {os.path.join(cwd, 'repo')}")
+            update_package('./repo')
+        else:
+            repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'))
+            print(f"Package Installed {repo.remotes.origin.url}")
+    except exc.GitCommandError as error:
+        print("Couldn't clone {} ({})".format(args.url, error))
+
+    if not args.vendors:
+        print("No Vendors Specified, Gathering All Device-Types")
+        files, vendors = getFiles()
     else:
-        repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'))
-        print(f"Package Installed {repo.remotes.origin.url}")
-except exc.GitCommandError as error:
-    print("Couldn't clone {} ({})".format(args.url, error))
+        print("Vendor Specified, Gathering All Matching Device-Types")
+        files, vendors = getFiles(args.vendors)
 
-nb = pynetbox.api(nbUrl, token=nbToken)
 
-if args.vendors is None:
-    print("No Vendors Specified, Gathering All Device-Types")
-    files, vendors = getFiles()
     print(str(len(vendors)) + " Vendors Found")
     print(str(len(files)) + " Device-Types Found")
     deviceTypes = readYAMl(files)
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
 
-else:
-    print("Vendor Specified, Gathering All Matching Device-Types")
-    files, vendors = getFiles(args.vendors)
-    print(str(len(vendors)) + " Vendors Found")
-    print(str(len(files)) + " Device-Types Found")
-    deviceTypes = readYAMl(files)
-    createManufacturers(vendors, nb)
-    createDeviceTypes(deviceTypes, nb)
+    print('---')
+    print('Script took {} to run'.format(datetime.now() - startTime))
+    print('{} devices created'.format(counter['added']))
+    print('{} interfaces/ports updated'.format(counter['updated']))
+    print('{} manufacturers created'.format(counter['manufacturer']))
 
-print('---')
-print('Script took {} to run'.format(datetime.now() - startTime))
-print('{} devices created'.format(counter['added']))
-print('{} interfaces/ports updated'.format(counter['updated']))
-print('{} manufacturers created'.format(counter['manufacturer']))
 
+if __name__ == "__main__":
+    main()

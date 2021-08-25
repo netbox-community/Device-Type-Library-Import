@@ -2,15 +2,13 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-REPO_URL = str(os.getenv("REPO_URL"))
-NETBOX_URL = str(os.getenv("NETBOX_URL"))
-NETBOX_TOKEN = str(os.getenv("NETBOX_TOKEN"))
+REPO_URL = os.getenv("REPO_URL")
+NETBOX_URL = os.getenv("NETBOX_URL")
+NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
+IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", "False") == "True")
 
 # optionnally load vendors through a space separated list as env var
-try:
-    VENDORS = os.getenv("VENDORS").split(" ") 
-except AttributeError:
-    VENDORS = None
+VENDORS = os.getenv("VENDORS", "").split()
 
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 
