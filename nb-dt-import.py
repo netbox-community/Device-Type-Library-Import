@@ -26,8 +26,10 @@ def update_package(path: str):
 def slugFormat(name):
     return name.lower().replace(' ', '_')
 
+YAML_EXTENSIONS = ['yml', 'yaml']
 
 def getFiles(vendors=None):
+    
     files = []
     discoveredVendors = []
     base_path = './repo/device-types/'
@@ -38,14 +40,16 @@ def getFiles(vendors=None):
                     if vendor.lower() == folder.lower():
                         discoveredVendors.append({'name': folder,
                                                   'slug': slugFormat(folder)})
-                        files.extend(glob.glob(base_path + folder + '/*.yaml'))
+                        for extension in YAML_EXTENSIONS:
+                            files.extend(glob.glob(base_path + folder + f'/*.{extension}'))
     else:
         for r, d, f in os.walk(base_path):
             for folder in d:
                 if folder.lower() != "Testing":
                     discoveredVendors.append({'name': folder,
                                               'slug': slugFormat(folder)})
-        files.extend(glob.glob(base_path + '[!Testing]*/*.yaml'))
+        for extension in YAML_EXTENSIONS:
+            files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
     return files, discoveredVendors
 
 
