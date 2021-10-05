@@ -10,6 +10,10 @@ IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", "False") == "True")
 # optionnally load vendors through a space separated list as env var
 VENDORS = os.getenv("VENDORS", "").split()
 
+# optionally load device types through a space separated list as env var
+SLUGS = os.getenv("SLUGS", "").split()
+
+
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 
 for var in MANDATORY_ENV_VARS:

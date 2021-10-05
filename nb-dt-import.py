@@ -8,6 +8,7 @@ import glob
 import argparse
 import os
 import settings
+import sys
 
 
 counter = Counter(added=0, updated=0, manufacturer=0)
@@ -53,7 +54,8 @@ def getFiles(vendors=None):
     return files, discoveredVendors
 
 
-def readYAMl(files):
+def readYAMl(files, **kwargs):
+    slugs = kwargs.get('slugs', None)
     deviceTypes = []
     manufacturers = []
     for file in files:
@@ -67,6 +69,11 @@ def readYAMl(files):
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
             data['manufacturer']['slug'] = slugFormat(manufacturer)
+
+        if slugs and data['slug'] not in slugs:
+            print(f"Skipping {data['model']}")
+            continue
+
         deviceTypes.append(data)
         manufacturers.append(manufacturer)
     return deviceTypes
@@ -387,14 +394,17 @@ def main():
 
     VENDORS = settings.VENDORS
     REPO_URL = settings.REPO_URL
+    SLUGS = settings.SLUGS
 
     parser = argparse.ArgumentParser(description='Import Netbox Device Types')
     parser.add_argument('--vendors', nargs='+', default=VENDORS,
                         help="List of vendors to import eg. apc cisco")
     parser.add_argument('--url', '--git', default=REPO_URL,
                         help="Git URL with valid Device Type YAML files")
-    args = parser.parse_args()
+    parser.add_argument('--slugs', nargs='+', default=SLUGS,
+                        help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
 
+    args = parser.parse_args()
 
     try:
         if os.path.isdir('./repo'):
@@ -416,8 +426,8 @@ def main():
 
 
     print(str(len(vendors)) + " Vendors Found")
-    print(str(len(files)) + " Device-Types Found")
-    deviceTypes = readYAMl(files)
+    deviceTypes = readYAMl(files, slugs=args.slugs)
+    print(str(len(deviceTypes)) + " Device-Types Found")
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
 
