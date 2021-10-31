@@ -77,6 +77,7 @@ docker build -t netbox-devicetype-import-library .
 The container supports the following env var as configuration : 
 
 - `REPO_URL`, the repo to look for device types (defaults to _https://github.com/netbox-community/devicetype-library.git_)
+- `REPO_BRANCH`, the branch to check out if appropriate, defaults to master.
 - `NETBOX_URL`, used to access netbox
 - `NETBOX_TOKEN`, token for accessing netbox
 - `VENDORS`, a space-separated list of vendors to import (defaults to None)
