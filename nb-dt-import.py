@@ -14,11 +14,12 @@ import sys
 counter = Counter(added=0, updated=0, manufacturer=0)
 
 
-def update_package(path: str):
+def update_package(path: str, branch: str):
     try:
         repo = Repo(path)
         if repo.remotes.origin.url.endswith('.git'):
             repo.remotes.origin.pull()
+            repo.git.checkout(branch)
             print(f"Pulled Repo {repo.remotes.origin.url}")
     except exc.InvalidGitRepositoryError:
         pass
@@ -394,7 +395,9 @@ def main():
 
     VENDORS = settings.VENDORS
     REPO_URL = settings.REPO_URL
+
     SLUGS = settings.SLUGS
+    REPO_BRANCH = settings.REPO_BRANCH
 
     parser = argparse.ArgumentParser(description='Import Netbox Device Types')
     parser.add_argument('--vendors', nargs='+', default=VENDORS,
@@ -403,7 +406,8 @@ def main():
                         help="Git URL with valid Device Type YAML files")
     parser.add_argument('--slugs', nargs='+', default=SLUGS,
                         help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
-
+    parser.add_argument('--branch', default=REPO_BRANCH,
+                        help="Git branch to use from repo")
     args = parser.parse_args()
 
     try:
@@ -412,7 +416,7 @@ def main():
                   + f"updating {os.path.join(cwd, 'repo')}")
             update_package('./repo')
         else:
-            repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'))
+            repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'), branch=args.branch)
             print(f"Package Installed {repo.remotes.origin.url}")
     except exc.GitCommandError as error:
         print("Couldn't clone {} ({})".format(args.url, error))

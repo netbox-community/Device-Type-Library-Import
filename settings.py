@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 REPO_URL = os.getenv("REPO_URL")
+REPO_BRANCH = os.getenv("REPO_BRANCH", "master")
 NETBOX_URL = os.getenv("NETBOX_URL")
 NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
 IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", "False") == "True")
