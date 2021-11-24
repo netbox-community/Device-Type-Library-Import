@@ -415,7 +415,7 @@ def main():
         if os.path.isdir('./repo'):
             print(f"Package devicetype-library is already installed, "
                   + f"updating {os.path.join(cwd, 'repo')}")
-            update_package('./repo')
+            update_package('./repo', branch=args.branch)
         else:
             repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'), branch=args.branch)
             print(f"Package Installed {repo.remotes.origin.url}")
