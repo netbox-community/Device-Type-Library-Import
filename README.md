@@ -58,10 +58,10 @@ To import only device by APC, for example:
 ./nb-dt-import.py --vendors apc
 ```
 
-`--vendors` can also accept a space separated list of vendors if you want to import multiple. 
+`--vendors` can also accept a comma separated list of vendors if you want to import multiple. 
 
 ```
-./nb-dt-import.py --vendors apc juniper
+./nb-dt-import.py --vendors apc,juniper
 ```
 
 ## Docker build
@@ -80,7 +80,7 @@ The container supports the following env var as configuration :
 - `REPO_BRANCH`, the branch to check out if appropriate, defaults to master.
 - `NETBOX_URL`, used to access netbox
 - `NETBOX_TOKEN`, token for accessing netbox
-- `VENDORS`, a space-separated list of vendors to import (defaults to None)
+- `VENDORS`, a comma-separated list of vendors to import (defaults to None)
 
 To run : 
 
