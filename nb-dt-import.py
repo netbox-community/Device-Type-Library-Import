@@ -9,6 +9,7 @@ import argparse
 import os
 import settings
 import sys
+import re
 
 
 counter = Counter(added=0, updated=0, manufacturer=0)
@@ -26,7 +27,7 @@ def update_package(path: str, branch: str):
 
 
 def slugFormat(name):
-    return name.lower().replace(' ', '_')
+    return re.sub('\W+','-', name.lower())
 
 YAML_EXTENSIONS = ['yml', 'yaml']
 
