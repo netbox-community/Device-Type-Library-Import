@@ -74,6 +74,12 @@ To build :
 docker build -t netbox-devicetype-import-library .
 ```
 
+Alternatively you can pull a pre-built image from Github Container Registry (ghcr.io):
+
+```
+docker pull ghcr.io/minitriga/Netbox-Device-Type-Library-Import
+```
+
 The container supports the following env var as configuration : 
 
 - `REPO_URL`, the repo to look for device types (defaults to _https://github.com/netbox-community/devicetype-library.git_)
