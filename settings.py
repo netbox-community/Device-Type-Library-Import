@@ -8,8 +8,8 @@ NETBOX_URL = os.getenv("NETBOX_URL")
 NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
 IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", "False") == "True")
 
-# optionnally load vendors through a space separated list as env var
-VENDORS = os.getenv("VENDORS", "").split(",")
+# optionally load vendors through a comma separated list as env var
+VENDORS = list(filter(None, os.getenv("VENDORS", "").split(",")))
 
 # optionally load device types through a space separated list as env var
 SLUGS = os.getenv("SLUGS", "").split()
