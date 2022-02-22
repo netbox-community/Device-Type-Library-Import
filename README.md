@@ -77,7 +77,7 @@ docker build -t netbox-devicetype-import-library .
 Alternatively you can pull a pre-built image from Github Container Registry (ghcr.io):
 
 ```
-docker pull ghcr.io/minitriga/Netbox-Device-Type-Library-Import
+docker pull ghcr.io/minitriga/netbox-device-type-library-import
 ```
 
 The container supports the following env var as configuration : 
@@ -91,7 +91,7 @@ The container supports the following env var as configuration :
 To run : 
 
 ```
-docker run -e "NETBOX_URL=http://netbox:8080/" -e "NETBOX_TOKEN=98765434567890" netbox-devicetype-import-library
+docker run -e "NETBOX_URL=http://netbox:8080/" -e "NETBOX_TOKEN=98765434567890" ghcr.io/minitriga/netbox-device-type-library-import
 ```
 
 ## 🧑‍💻 Contributing
