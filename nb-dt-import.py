@@ -297,6 +297,42 @@ def createDeviceBays(devicebays, deviceType, nb):
         print(e.error)
 
 
+def create_module_bays(module_bays, device_type, nb):
+    '''Create module bays.
+
+    Args:
+        module_bays: parsed YAML module_bays section.
+        device_type: the device type instance from netbox.
+        nb: Netbox API instance
+    '''
+    all_module_bays = {
+        str(item): item for item in nb.dcim.module_bay_templates.filter(
+            devicetype_id=device_type
+        )
+    }
+    need_module_bays = []
+    for module_bay in module_bays:
+        try:
+            dbGet = all_module_bays[module_bay["name"]]
+            print(f'Module Bay Template Exists: {dbGet.name} - '
+                  + f'{dbGet.device_type.id} - {dbGet.id}')
+        except KeyError:
+            module_bay['device_type'] = device_type
+            need_module_bays.append(module_bay)
+
+    if not need_module_bays:
+        return
+
+    try:
+        module_bay_res = nb.dcim.module_bay_templates.create(need_module_bays)
+        for module_bay in module_bay_res:
+            print(f'Module Bay Created: {module_bay.name} - '
+                  + f'{module_bay.device_type.id} - {module_bay.id}')
+            counter.update({'updated': 1})
+    except pynetbox.RequestError as e:
+        print(e.error)
+
+
 def createPowerOutlets(poweroutlets, deviceType, nb):
     all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(devicetype_id=deviceType)}
     need_poweroutlets = []
@@ -375,6 +411,9 @@ def createDeviceTypes(deviceTypes, nb):
         if "device-bays" in deviceType:
             createDeviceBays(deviceType["device-bays"],
                              dt.id, nb)
+        if settings.IMPORT_MODULES and 'module-bays' in deviceType:
+            create_module_bays(deviceType['module-bays'],
+                               dt.id, nb)
 
 
 def main():
