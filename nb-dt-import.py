@@ -791,7 +791,7 @@ def main():
     deviceTypes = readYAMl(files, slugs=args.slugs)
     print(str(len(deviceTypes)) + " Device-Types Found")
     createManufacturers(vendors, nb)
-    #createDeviceTypes(deviceTypes, nb)
+    createDeviceTypes(deviceTypes, nb)
 
     if settings.IMPORT_MODULES:
         if not args.vendors:
