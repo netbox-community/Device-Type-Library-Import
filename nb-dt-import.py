@@ -12,7 +12,13 @@ import sys
 import re
 
 
-counter = Counter(added=0, updated=0, manufacturer=0)
+counter = Counter(
+    added=0,
+    updated=0,
+    manufacturer=0,
+    module_added=0,
+    module_port_added=0,
+)
 
 def determine_features(nb):
     '''Automatically determine the netbox features available.
@@ -214,7 +220,7 @@ def createInterfaces(interfaces, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
     
-def create_interfaces_modules(interfaces, module_type, nb):
+def create_module_interfaces(interfaces, module_type, nb):
     all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(moduletype_id=module_type)}
     need_interfaces = []
     for interface in interfaces:
@@ -235,7 +241,7 @@ def create_interfaces_modules(interfaces, module_type, nb):
             print(f'Interface Template Created: {intf.name} - '
               + f'{intf.type} - {intf.module_type.id} - '
               + f'{intf.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -285,7 +291,7 @@ def create_module_console_ports(consoleports, module_type, nb):
         for port in cpSuccess:
             print(f'Console Port Created: {port.name} - {port.type} - ' +
                 f'{port.module_type.id} - {port.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(f"Error creating module console port: {e.error}")
 
@@ -334,7 +340,7 @@ def create_module_power_ports(powerports, module_type, nb):
         for pp in ppSuccess:
             print(f'Power port template created: {pp.name} - '
               + f'{pp.type} - {pp.module_type.id} - {pp.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -388,7 +394,7 @@ def create_module_console_server_ports(consoleserverports, module_type, nb):
             print(f'Console Server Port Created: {csp.name} - '
                   + f'{csp.type} - {csp.module_type.id} - '
                   + f'{csp.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -456,7 +462,7 @@ def create_module_front_ports(frontports, module_type, nb):
             print(f'Front Port Created: {fp.name} - '
                   + f'{fp.type} - {fp.module_type.id} - '
                   + f'{fp.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -506,7 +512,7 @@ def create_module_rear_ports(rearports, module_type, nb):
         for rp in rpSuccess:
             print(f'Rear Port Created: {rp.name} - {rp.type}'
                   + f' - {rp.module_type.id} - {rp.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -649,7 +655,7 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
             print(f'Power Outlet Created: {po.name} - '
                   + f'{po.type} - {po.module_type.id} - '
                   + f'{po.id}')
-            counter.update({'updated': 1})
+            counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
@@ -727,7 +733,7 @@ def create_module_types(module_types, nb):
         except KeyError:
             try:
                 module_type_res = nb.dcim.module_types.create(curr_mt)
-                counter.update({'added': 1})
+                counter.update({'module_added': 1})
                 print(f'Module Type Created: {module_type_res.manufacturer.name} - '
                       + f'{module_type_res.model} - {module_type_res.id}')
             except pynetbox.RequestError as exce:
@@ -737,8 +743,8 @@ def create_module_types(module_types, nb):
         #module_type_res = all_module_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
 
         if "interfaces" in curr_mt:
-            create_interfaces_modules(curr_mt["interfaces"],
-                                      module_type_res.id, nb)
+            create_module_interfaces(curr_mt["interfaces"],
+                                     module_type_res.id, nb)
         if "power-ports" in curr_mt:
             create_module_power_ports(curr_mt["power-ports"],
                                       module_type_res.id, nb)
@@ -839,7 +845,9 @@ def main():
     print('{} devices created'.format(counter['added']))
     print('{} interfaces/ports updated'.format(counter['updated']))
     print('{} manufacturers created'.format(counter['manufacturer']))
-
+    if settings.NETBOX_FEATURES['modules']:
+        print(f"{counter['module_added']} modules created")
+        print(f"{counter['module_port_added']} module interface / ports created")
 
 if __name__ == "__main__":
     main()
