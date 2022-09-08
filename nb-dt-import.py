@@ -55,8 +55,19 @@ def getFiles(vendors=None):
             files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
     return files, discoveredVendors
 
-def get_files_modules(vendors=None):
-    
+def get_files_modules(vendors: list[str]=None):
+    '''Get files list for modules.
+
+    Args:
+        vendors: List of vendors to sync or None to sync all vendors.
+
+    Returns:
+        A 2-tuple of:
+        - list of filenames found
+        - list of vendors found
+
+    '''
+
     files = []
     discoveredVendors = []
     base_path = './repo/module-types/'
@@ -81,6 +92,7 @@ def get_files_modules(vendors=None):
                                               'slug': slugFormat(folder)})
         for extension in YAML_EXTENSIONS:
             files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
+
     return files, discoveredVendors
 
 def readYAMl(files, **kwargs):
@@ -108,6 +120,7 @@ def readYAMl(files, **kwargs):
     return deviceTypes
 
 def read_yaml_modules(files, **kwargs):
+
     slugs = kwargs.get('slugs', None)
     module_types = []
     manufacturers = []
