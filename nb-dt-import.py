@@ -598,7 +598,8 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     if not need_poweroutlets:
         return
 
-    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(moduletype_id=module_type)}
+    all_power_ports = {str(item): item for item in nb.dcim.\
+        power_port_templates.filter(moduletype_id=module_type)}
     for outlet in need_poweroutlets:
         try:
             ppGet = all_power_ports[outlet["power_port"]]
@@ -612,40 +613,6 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
         for po in poSuccess:
             print(f'Power Outlet Created: {po.name} - '
                   + f'{po.type} - {po.module_type.id} - '
-                  + f'{po.id}')
-            counter.update({'updated': 1})
-    except pynetbox.RequestError as e:
-        print(e.error)
-
-def create_module_power_outlets(poweroutlets, deviceType, nb):
-    all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(devicetype_id=deviceType)}
-    need_poweroutlets = []
-    for poweroutlet in poweroutlets:
-        try:
-            poGet = all_poweroutlets[poweroutlet["name"]]
-            print(f'Power Outlet Template Exists: {poGet.name} - '
-                  + f'{poGet.type} - {poGet.device_type.id} - {poGet.id}')
-        except KeyError:
-            poweroutlet["device_type"] = deviceType
-            need_poweroutlets.append(poweroutlet)
-
-    if not need_poweroutlets:
-        return
-
-    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(devicetype_id=deviceType)}
-    for outlet in need_poweroutlets:
-        try:
-            ppGet = all_power_ports[outlet["power_port"]]
-            outlet['power_port'] = ppGet.id
-        except KeyError:
-            pass
-
-    try:
-        poSuccess = nb.dcim.power_outlet_templates.create(
-            need_poweroutlets)
-        for po in poSuccess:
-            print(f'Power Outlet Created: {po.name} - '
-                  + f'{po.type} - {po.device_type.id} - '
                   + f'{po.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
