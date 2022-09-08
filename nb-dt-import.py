@@ -666,6 +666,15 @@ def createDeviceTypes(deviceTypes, nb):
                                dt.id, nb)
 
 def create_module_types(module_types, nb):
+    '''Create missing module types.
+
+    Args:
+        module_types: yaml data from repo.
+        nb: pynetbox API instance
+
+    Returns:
+        None
+    '''
 
     all_module_types = {}
     for curr_nb_mt in nb.dcim.module_types.all():
