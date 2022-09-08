@@ -14,6 +14,28 @@ import re
 
 counter = Counter(added=0, updated=0, manufacturer=0)
 
+def determine_features(nb):
+    '''Automatically determine the netbox features available.
+
+    Currently only checks for existence of module-types.
+
+    Args:
+        nb: pynetbox API instance
+
+    Returns:
+        None
+
+    Raises:
+        None
+    '''
+
+    # nb.version should be the version in the form '3.2'
+    nb_ver = [int(x) for x in nb.version.split('.')]
+
+    # Later than 3.2
+    # Might want to check for the module-types entry as well?
+    if nb_ver[0] > 3 or (nb_ver[0] == 3 and nb_ver[1] >= 2):
+        settings.NETBOX_FEATURES['modules'] = True
 
 def update_package(path: str, branch: str):
     try:
@@ -584,6 +606,19 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
         print(e.error)
 
 def create_module_power_outlets(poweroutlets, module_type, nb):
+    '''Create missing module power outlets.
+
+    Args:
+        poweroutlets: YAML power outlet data.
+        module_type: Netbox module_type instance.
+        nb: pynetbox API instance.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    '''
     all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(moduletype_id=module_type)}
     need_poweroutlets = []
     for poweroutlet in poweroutlets:
@@ -661,7 +696,7 @@ def createDeviceTypes(deviceTypes, nb):
         if "device-bays" in deviceType:
             createDeviceBays(deviceType["device-bays"],
                              dt.id, nb)
-        if settings.IMPORT_MODULES and 'module-bays' in deviceType:
+        if settings.NETBOX_FEATURES['modules'] and 'module-bays' in deviceType:
             create_module_bays(deviceType['module-bays'],
                                dt.id, nb)
 
@@ -732,6 +767,8 @@ def main():
     nbToken = settings.NETBOX_TOKEN
     nb = pynetbox.api(nbUrl, token=nbToken)
 
+    determine_features(nb)
+
     if settings.IGNORE_SSL_ERRORS:
         import requests
         requests.packages.urllib3.disable_warnings()
@@ -782,7 +819,7 @@ def main():
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
 
-    if settings.IMPORT_MODULES:
+    if settings.NETBOX_FEATURES['modules']:
         if not args.vendors:
             print("No Vendors Specified, Gathering All Module-Types")
             files, vendors = get_files_modules()
