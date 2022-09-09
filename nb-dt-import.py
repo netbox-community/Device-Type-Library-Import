@@ -83,7 +83,7 @@ def getFiles(vendors=None):
             files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
     return files, discoveredVendors
 
-def get_files_modules(vendors: list[str]=None):
+def get_files_modules(vendors=None):
     '''Get files list for modules.
 
     Args:
