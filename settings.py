@@ -14,6 +14,9 @@ VENDORS = list(filter(None, os.getenv("VENDORS", "").split(",")))
 # optionally load device types through a space separated list as env var
 SLUGS = os.getenv("SLUGS", "").split()
 
+NETBOX_FEATURES = {
+    'modules': False,
+}
 
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 
