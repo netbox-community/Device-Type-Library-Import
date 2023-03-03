@@ -10,6 +10,7 @@ import os
 import settings
 import sys
 import re
+import requests
 
 
 counter = Counter(
@@ -768,21 +769,7 @@ def main():
 
     cwd = os.getcwd()
     startTime = datetime.now()
-
-    nbUrl = settings.NETBOX_URL
-    nbToken = settings.NETBOX_TOKEN
-    nb = pynetbox.api(nbUrl, token=nbToken)
-
-    determine_features(nb)
-
-    if settings.IGNORE_SSL_ERRORS:
-        import requests
-        requests.packages.urllib3.disable_warnings()
-        session = requests.Session()
-        session.verify = False
-        nb.http_session = session
-
-
+    
     VENDORS = settings.VENDORS
     REPO_URL = settings.REPO_URL
 
@@ -798,7 +785,26 @@ def main():
                         help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
     parser.add_argument('--branch', default=REPO_BRANCH,
                         help="Git branch to use from repo")
+    parser.add_argument('--verbose', action='store_true',
+                        help="Print verbose output")
     args = parser.parse_args()
+
+    nbUrl = settings.NETBOX_URL
+    nbToken = settings.NETBOX_TOKEN
+    nb = pynetbox.api(nbUrl, token=nbToken)
+    
+    try:
+        determine_features(nb)
+    except requests.exceptions.SSLError as e:
+        if args.verbose:
+            print(e)
+        if not settings.IGNORE_SSL_ERRORS:
+            print("IGNORE_SSL_ERRORS is False. SSL verification failed, exiting.")
+            sys.exit(1)
+        print("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
+        requests.packages.urllib3.disable_warnings()
+        nb.http_session.verify = False
+        determine_features(nb)
 
     try:
         if os.path.isdir('./repo'):
