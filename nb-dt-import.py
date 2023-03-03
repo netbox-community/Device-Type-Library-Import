@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from git import Repo, exc, RemoteProgress
 from collections import Counter
 from datetime import datetime
 import yaml
@@ -10,7 +9,6 @@ import re
 import requests
 
 import settings
-import gitcmd as git
 
 counter = Counter(
     added=0,
@@ -775,14 +773,6 @@ def main():
         requests.packages.urllib3.disable_warnings()
         nb.http_session.verify = False
         determine_features(nb)
-
-    if os.path.isdir(settings.REPO_PATH):
-        print(f"Package devicetype-library is already installed, "
-                + f"updating {os.path.join(cwd, 'repo')}")
-        git.pull_repo(settings.REPO_PATH, branch=args.branch)
-    else:
-        repo = git.clone_repo(args.url, os.path.join(cwd, 'repo'), args.branch)
-        print(f"Package Installed {repo.remotes.origin.url}")
 
     if not args.vendors:
         print("No Vendors Specified, Gathering All Device-Types")

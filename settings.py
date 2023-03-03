@@ -1,24 +1,10 @@
 from argparse import ArgumentParser
 from sys import exit as system_exit
 import os
-
+from exception_handler import handle_exception
+from gitcmd import GitCMD
 from dotenv import load_dotenv
 load_dotenv()
-
-
-def handle_exception(exception_type, exception, stack_trace=None):
-    exception_dict = {
-        "EnvironmentError": f'Environment variable "{exception}" is not set.',
-        "SSLError": f'SSL verification failed. IGNORE_SSL_ERRORS is {exception}. Set IGNORE_SSL_ERRORS to True if you want to ignore this error. EXITING.',
-        "GitCommandError": f'The repo "{exception}" is not a valid git repo.',
-        "GitInvalidRepositoryError": f'The repo "{exception}" is not a valid git repo.',
-        "Exception": f'An unknown error occurred: "{exception}"'
-    }
-    if args.verbose and stack_trace:
-        print(stack_trace)
-    print(exception_dict[exception_type])
-    system_exit(1)
-
 
 REPO_URL = os.getenv("REPO_URL",
                      default="https://github.com/netbox-community/devicetype-library.git")
@@ -56,4 +42,6 @@ args = parser.parse_args()
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 for var in MANDATORY_ENV_VARS:
     if var not in os.environ:
-        handle_exception("EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
+        handle_exception(args, "EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
+
+git_repo = GitCMD(args, REPO_PATH)
