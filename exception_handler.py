@@ -8,6 +8,7 @@ def handle_exception(args, exception_type, exception, stack_trace=None):
         "GitInvalidRepositoryError": f'The repo "{exception}" is not a valid git repo.',
         "Exception": f'An unknown error occurred: "{exception}"'
     }
+    print(args)
     if args.verbose and stack_trace:
         print(stack_trace)
     print(exception_dict[exception_type])

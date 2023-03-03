@@ -768,7 +768,7 @@ def main():
         determine_features(nb)
     except requests.exceptions.SSLError as ssl_exception:
         if not settings.IGNORE_SSL_ERRORS:
-            settings.handle_exception("SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
+            settings.handle_exception(settings.args, "SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
         print("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
         requests.packages.urllib3.disable_warnings()
         nb.http_session.verify = False

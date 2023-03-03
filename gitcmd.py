@@ -26,21 +26,21 @@ class GitCMD:
                     + f"updating {os.path.join(self.cwd, self.repo_path)}")
             self.repo = Repo(self.repo_path)
             if not self.repo.remotes.origin.url.endswith('.git'):
-                settings.handle_exception("GitInvalidRepositoryError", self.repo.remotes.origin.url, f"Origin URL {self.repo.remotes.origin.url} does not end with .git")
+                settings.handle_exception(settings.args, "GitInvalidRepositoryError", self.repo.remotes.origin.url, f"Origin URL {self.repo.remotes.origin.url} does not end with .git")
             self.repo.remotes.origin.pull()
             self.repo.git.checkout(self.branch)
             print(f"Pulled Repo {self.repo.remotes.origin.url}")
         except exc.GitCommandError as git_error:
-            settings.handle_exception("GitCommandError", self.repo.remotes.origin.url, git_error)
+            settings.handle_exception(settings.args, "GitCommandError", self.repo.remotes.origin.url, git_error)
         except Exception as git_error:
-            settings.handle_exception("Exception", 'Git Repository Error', git_error)
+            settings.handle_exception(settings.args, "Exception", 'Git Repository Error', git_error)
         
     def clone_repo(self):
         try:
             self.repo = Repo.clone_from(self.url, os.path.join(self.cwd, self.repo_path), branch=self.branch)
             print(f"Package Installed {self.repo.remotes.origin.url}")
         except exc.GitCommandError as git_error:
-            settings.handle_exception("GitCommandError", self.url, git_error)
+            settings.handle_exception(settings.args, "GitCommandError", self.url, git_error)
         except Exception as git_error:
-            settings.handle_exception("Exception", 'Git Repository Error', git_error)
+            settings.handle_exception(settings.args, "Exception", 'Git Repository Error', git_error)
 

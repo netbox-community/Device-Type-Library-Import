@@ -33,7 +33,7 @@ parser.add_argument('--slugs', nargs='+', default=SLUGS,
                     help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
 parser.add_argument('--branch', default=REPO_BRANCH,
                     help="Git branch to use from repo")
-parser.add_argument('--verbose', action='store_true',
+parser.add_argument('--verbose', action='store_true', default=False,
                     help="Print verbose output")
 
 args = parser.parse_args()
