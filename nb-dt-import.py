@@ -5,13 +5,12 @@ from datetime import datetime
 import yaml
 import pynetbox
 import glob
-import argparse
 import os
-import settings
-import sys
 import re
 import requests
 
+import settings
+import gitcmd as git
 
 counter = Counter(
     added=0,
@@ -44,15 +43,7 @@ def determine_features(nb):
     if nb_ver[0] > 3 or (nb_ver[0] == 3 and nb_ver[1] >= 2):
         settings.NETBOX_FEATURES['modules'] = True
 
-def update_package(path: str, branch: str):
-    try:
-        repo = Repo(path)
-        if repo.remotes.origin.url.endswith('.git'):
-            repo.remotes.origin.pull()
-            repo.git.checkout(branch)
-            print(f"Pulled Repo {repo.remotes.origin.url}")
-    except exc.InvalidGitRepositoryError:
-        pass
+
 
 
 def slugFormat(name):
@@ -769,25 +760,7 @@ def main():
 
     cwd = os.getcwd()
     startTime = datetime.now()
-    
-    VENDORS = settings.VENDORS
-    REPO_URL = settings.REPO_URL
-
-    SLUGS = settings.SLUGS
-    REPO_BRANCH = settings.REPO_BRANCH
-
-    parser = argparse.ArgumentParser(description='Import Netbox Device Types')
-    parser.add_argument('--vendors', nargs='+', default=VENDORS,
-                        help="List of vendors to import eg. apc cisco")
-    parser.add_argument('--url', '--git', default=REPO_URL,
-                        help="Git URL with valid Device Type YAML files")
-    parser.add_argument('--slugs', nargs='+', default=SLUGS,
-                        help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
-    parser.add_argument('--branch', default=REPO_BRANCH,
-                        help="Git branch to use from repo")
-    parser.add_argument('--verbose', action='store_true',
-                        help="Print verbose output")
-    args = parser.parse_args()
+    args = settings.args
 
     nbUrl = settings.NETBOX_URL
     nbToken = settings.NETBOX_TOKEN
@@ -795,27 +768,21 @@ def main():
     
     try:
         determine_features(nb)
-    except requests.exceptions.SSLError as e:
-        if args.verbose:
-            print(e)
+    except requests.exceptions.SSLError as ssl_exception:
         if not settings.IGNORE_SSL_ERRORS:
-            print("IGNORE_SSL_ERRORS is False. SSL verification failed, exiting.")
-            sys.exit(1)
+            settings.handle_exception("SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
         print("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
         requests.packages.urllib3.disable_warnings()
         nb.http_session.verify = False
         determine_features(nb)
 
-    try:
-        if os.path.isdir('./repo'):
-            print(f"Package devicetype-library is already installed, "
-                  + f"updating {os.path.join(cwd, 'repo')}")
-            update_package('./repo', branch=args.branch)
-        else:
-            repo = Repo.clone_from(args.url, os.path.join(cwd, 'repo'), branch=args.branch)
-            print(f"Package Installed {repo.remotes.origin.url}")
-    except exc.GitCommandError as error:
-        print("Couldn't clone {} ({})".format(args.url, error))
+    if os.path.isdir(settings.REPO_PATH):
+        print(f"Package devicetype-library is already installed, "
+                + f"updating {os.path.join(cwd, 'repo')}")
+        git.pull_repo(settings.REPO_PATH, branch=args.branch)
+    else:
+        repo = git.clone_repo(args.url, os.path.join(cwd, 'repo'), args.branch)
+        print(f"Package Installed {repo.remotes.origin.url}")
 
     if not args.vendors:
         print("No Vendors Specified, Gathering All Device-Types")
