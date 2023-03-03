@@ -9,7 +9,7 @@ python-utils==2.3.0
 PyYAML==5.4
 requests==2.25.1
 six==1.14.0
-smmap2==2.0.5
+smmap2==3.0.1
 urllib3==1.26.5
 python-dotenv==0.15.0
 wheel==0.36.2
