@@ -8,7 +8,7 @@ pynetbox==4.2.5
 python-utils==2.3.0
 PyYAML==5.4
 requests==2.25.1
-six==1.14.0
+six==1.16.0
 smmap2==2.0.5
 urllib3==1.26.5
 python-dotenv==0.15.0
