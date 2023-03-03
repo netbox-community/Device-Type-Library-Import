@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from sys import exit as system_exit
 import os
-from exception_handler import handle_exception
+from exception_handler import ExceptionHandler
 from gitcmd import GitCMD
 from dotenv import load_dotenv
 load_dotenv()
@@ -38,10 +38,11 @@ parser.add_argument('--verbose', action='store_true', default=False,
 
 args = parser.parse_args()
 
+handle = ExceptionHandler(args)
 # Evaluate environment variables and exit if one of the mandatory ones are not set
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 for var in MANDATORY_ENV_VARS:
     if var not in os.environ:
-        handle_exception(args, "EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
+        handle.exception("EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
 
 git_repo = GitCMD(args, REPO_PATH)
