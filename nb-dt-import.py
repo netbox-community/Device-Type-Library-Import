@@ -9,6 +9,7 @@ import re
 import requests
 
 import settings
+from netbox_api import NetBox
 
 counter = Counter(
     added=0,
@@ -758,9 +759,8 @@ def main():
     startTime = datetime.now()
     args = settings.args
 
-    nbUrl = settings.NETBOX_URL
-    nbToken = settings.NETBOX_TOKEN
-    nb = pynetbox.api(nbUrl, token=nbToken)
+    netbox = NetBox(settings)
+    nb = netbox.get_api()
     
     try:
         determine_features(nb)
