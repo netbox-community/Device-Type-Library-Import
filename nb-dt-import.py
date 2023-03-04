@@ -19,32 +19,6 @@ counter = Counter(
     module_port_added=0,
 )
 
-def determine_features(nb):
-    '''Automatically determine the netbox features available.
-
-    Currently only checks for existence of module-types.
-
-    Args:
-        nb: pynetbox API instance
-
-    Returns:
-        None
-
-    Raises:
-        None
-    '''
-
-    # nb.version should be the version in the form '3.2'
-    nb_ver = [int(x) for x in nb.version.split('.')]
-
-    # Later than 3.2
-    # Might want to check for the module-types entry as well?
-    if nb_ver[0] > 3 or (nb_ver[0] == 3 and nb_ver[1] >= 2):
-        settings.NETBOX_FEATURES['modules'] = True
-
-
-
-
 def slugFormat(name):
     return re.sub('\W+','-', name.lower())
 
@@ -761,16 +735,6 @@ def main():
 
     netbox = NetBox(settings)
     nb = netbox.get_api()
-    
-    try:
-        determine_features(nb)
-    except requests.exceptions.SSLError as ssl_exception:
-        if not settings.IGNORE_SSL_ERRORS:
-            settings.handle.exception("SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
-        print("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
-        requests.packages.urllib3.disable_warnings()
-        nb.http_session.verify = False
-        determine_features(nb)
 
     if not args.vendors:
         print("No Vendors Specified, Gathering All Device-Types")
