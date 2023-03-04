@@ -1,9 +1,4 @@
 from sys import exit as system_exit
-
-
-
-    
-    
 class ExceptionHandler:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)

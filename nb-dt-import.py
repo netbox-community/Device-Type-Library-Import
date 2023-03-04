@@ -755,8 +755,6 @@ def create_module_types(module_types, nb):
                                       module_type_res.id, nb)
 
 def main():
-
-    cwd = os.getcwd()
     startTime = datetime.now()
     args = settings.args
 
