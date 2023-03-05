@@ -37,6 +37,8 @@ parser.add_argument('--verbose', action='store_true', default=False,
 
 args = parser.parse_args()
 
+args.vendors = [v for vendor in args.vendors for v in vendor.split(",") if v.strip()]
+
 handle = ExceptionHandler(args)
 # Evaluate environment variables and exit if one of the mandatory ones are not set
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
