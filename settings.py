@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from sys import exit as system_exit
 import os
 from exception_handler import ExceptionHandler
 from repo import DTLRepo
@@ -45,4 +44,4 @@ for var in MANDATORY_ENV_VARS:
     if var not in os.environ:
         handle.exception("EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
 
-dtlRepo = DTLRepo(args, REPO_PATH, handle)
+dtl_repo = DTLRepo(args, REPO_PATH, handle)

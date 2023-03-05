@@ -3,10 +3,8 @@ from collections import Counter
 from datetime import datetime
 import yaml
 import pynetbox
-import glob
+from glob import glob
 import os
-import re
-import requests
 
 import settings
 from netbox_api import NetBox
@@ -18,34 +16,6 @@ counter = Counter(
     module_added=0,
     module_port_added=0,
 )
-
-def slugFormat(name):
-    return re.sub('\W+','-', name.lower())
-
-YAML_EXTENSIONS = ['yml', 'yaml']
-
-def getFiles(vendors=None):
-    files = []
-    discoveredVendors = []
-    base_path = './repo/device-types/'
-    if vendors:
-        for r, d, f in os.walk(base_path):
-            for folder in d:
-                for vendor in vendors:
-                    if vendor.lower() == folder.lower():
-                        discoveredVendors.append({'name': folder,
-                                                  'slug': slugFormat(folder)})
-                        for extension in YAML_EXTENSIONS:
-                            files.extend(glob.glob(base_path + folder + f'/*.{extension}'))
-    else:
-        for r, d, f in os.walk(base_path):
-            for folder in d:
-                if folder.lower() != "Testing":
-                    discoveredVendors.append({'name': folder,
-                                              'slug': slugFormat(folder)})
-        for extension in YAML_EXTENSIONS:
-            files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
-    return files, discoveredVendors
 
 def get_files_modules(vendors=None):
     '''Get files list for modules.
@@ -69,10 +39,10 @@ def get_files_modules(vendors=None):
                 for vendor in vendors:
                     if vendor.lower() == folder.lower():
                         discoveredVendors.append({'name': folder,
-                                                  'slug': slugFormat(folder)})
-                        for extension in YAML_EXTENSIONS:
+                                                  'slug': settings.dtl_repo.slug_format(folder)})
+                        for extension in settings.dtl_repo.yaml_extensions:
                             files.extend(
-                                glob.glob(
+                                glob(
                                     base_path + folder + f'/*.{extension}'
                                 )
                             )
@@ -81,9 +51,9 @@ def get_files_modules(vendors=None):
             for folder in d:
                 if folder.lower() != "Testing":
                     discoveredVendors.append({'name': folder,
-                                              'slug': slugFormat(folder)})
-        for extension in YAML_EXTENSIONS:
-            files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
+                                              'slug': settings.dtl_repo.slug_format(folder)})
+        for extension in settings.dtl_repo.yaml_extensions:
+            files.extend(glob(base_path + f'[!Testing]*/*.{extension}'))
 
     return files, discoveredVendors
 
@@ -101,7 +71,7 @@ def readYAMl(files, **kwargs):
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
-            data['manufacturer']['slug'] = slugFormat(manufacturer)
+            data['manufacturer']['slug'] = settings.dtl_repo.slug_format(manufacturer)
 
         if slugs and data['slug'] not in slugs:
             print(f"Skipping {data['model']}")
@@ -126,7 +96,7 @@ def read_yaml_modules(files, **kwargs):
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
             data['manufacturer']['name'] = manufacturer
-            data['manufacturer']['slug'] = slugFormat(manufacturer)
+            data['manufacturer']['slug'] = settings.dtl_repo.slug_format(manufacturer)
 
         if slugs and data['slug'] not in slugs:
             print(f"Skipping {data['model']}")
@@ -737,10 +707,10 @@ def main():
 
     if not args.vendors:
         print("No Vendors Specified, Gathering All Device-Types")
-        files, vendors = getFiles()
+        files, vendors = settings.dtl_repo.get_files()
     else:
         print("Vendor Specified, Gathering All Matching Device-Types")
-        files, vendors = getFiles(args.vendors)
+        files, vendors = settings.dtl_repo.get_files(args.vendors)
 
 
     print(str(len(vendors)) + " Vendors Found")
