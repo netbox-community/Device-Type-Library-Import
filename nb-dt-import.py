@@ -10,12 +10,12 @@ import settings
 from netbox_api import NetBox
 
 counter = Counter(
-    added=0,
-    updated=0,
-    manufacturer=0,
-    module_added=0,
-    module_port_added=0,
-)
+            added=0,
+            updated=0,
+            manufacturer=0,
+            module_added=0,
+            module_port_added=0,
+        )
 
 def get_files_modules(vendors=None):
     '''Get files list for modules.
@@ -82,31 +82,12 @@ def read_yaml_modules(files, **kwargs):
         manufacturers.append(manufacturer)
     return module_types
 
-def createManufacturers(vendors, nb):
-    all_manufacturers = {str(item): item for item in nb.dcim.manufacturers.all()}
-    need_manufacturers = []
-    for vendor in vendors:
-        try:
-            manGet = all_manufacturers[vendor["name"]]
-            settings.handle.verbose_log(f'Manufacturer Exists: {manGet.name} - {manGet.id}')
-        except KeyError:
-            need_manufacturers.append(vendor)
 
-    if not need_manufacturers:
-        return
-
-    try:
-        manSuccess = nb.dcim.manufacturers.create(need_manufacturers)
-        for man in manSuccess:
-            settings.handle.verbose_log(f'Manufacturer Created: {man.name} - '
-                  + f'{man.id}')
-            counter.update({'manufacturer': 1})
-    except pynetbox.RequestError as e:
-        print(e.error)
 
 
 def createInterfaces(interfaces, deviceType, nb):
     all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(devicetype_id=deviceType)}
+    # print(all_interfaces)
     need_interfaces = []
     for interface in interfaces:
         try:
@@ -685,7 +666,7 @@ def main():
     settings.handle.log(f'{len(vendors)} Vendors Found')
     deviceTypes = settings.dtl_repo.parse_files(files, slugs=args.slugs)
     settings.handle.log(f'{len(deviceTypes)} Device-Types Found')
-    createManufacturers(vendors, nb)
+    netbox.create_manufacturers(vendors)
     createDeviceTypes(deviceTypes, nb)
 
     if settings.NETBOX_FEATURES['modules']:
@@ -700,14 +681,14 @@ def main():
         settings.handle.log(f'{len(vendors)} Module Vendors Found')
         module_types = read_yaml_modules(files, slugs=args.slugs)
         settings.handle.log(f'{len(module_types)} Module-Types Found')
-        createManufacturers(vendors, nb)
+        netbox.create_manufacturers(vendors)
         create_module_types(module_types, nb)
 
     settings.handle.log('---')
     settings.handle.verbose_log(f'Script took {(datetime.now() - startTime)} to run')
     settings.handle.log(f'{counter["added"]} devices created')
     settings.handle.log(f'{counter["updated"]} interfaces/ports updated')
-    settings.handle.log(f'{counter["manufacturer"]} manufacturers created')
+    settings.handle.log(f'{netbox.counter["manufacturer"]} manufacturers created')
     if settings.NETBOX_FEATURES['modules']:
         settings.handle.log(f'{counter["module_added"]} modules created')
         settings.handle.log(f'{counter["module_port_added"]} module interface / ports created')
