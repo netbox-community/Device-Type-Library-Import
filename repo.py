@@ -20,16 +20,22 @@ class DTLRepo:
             self.pull_repo()
         else:
             self.clone_repo()
-    
+
     def get_relative_path(self):
         return self.repo_path
-    
+
     def get_absolute_path(self):
         return os.path.join(self.cwd, self.repo_path)
-    
+
+    def get_devices_path(self):
+        return os.path.join(self.get_absolute_path(), 'device-types')
+
+    def get_modules_path(self):
+        return os.path.join(self.get_absolute_path(), 'module-types')
+
     def slug_format(self, name):
         return re_sub('\W+','-', name.lower())
-        
+
     def pull_repo(self):
         try:
             print("Package devicetype-library is already installed, "
@@ -58,21 +64,12 @@ class DTLRepo:
         files = []
         discovered_vendors = []
         base_path = './repo/device-types/'
-        if vendors:
-            for r, d, f in os.walk(base_path):
-                for folder in d:
-                    for vendor in vendors:
-                        if vendor.lower() == folder.lower():
-                            discovered_vendors.append({'name': folder,
-                                                    'slug': self.slug_format(folder)})
-                            for extension in self.yaml_extensions:
-                                files.extend(glob(base_path + folder + f'/*.{extension}'))
-        else:
-            for r, d, f in os.walk(base_path):
-                for folder in d:
-                    if folder.lower() != "Testing":
-                        discovered_vendors.append({'name': folder,
-                                                'slug': self.slug_format(folder)})
-            for extension in self.yaml_extensions:
-                files.extend(glob(base_path + f'[!Testing]*/*.{extension}'))
+        vendor_dirs = os.listdir(base_path)
+        # try:
+        for folder in [vendor for vendor in vendor_dirs if not vendors or vendor.casefold() in vendors]:
+            if folder.casefold() is not "testing":
+                discovered_vendors.append({'name': folder,
+                                        'slug': self.slug_format(folder)})
+                for extension in self.yaml_extensions:
+                    files.extend(glob(base_path + folder + f'/*.{extension}'))
         return files, discovered_vendors

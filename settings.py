@@ -37,7 +37,7 @@ parser.add_argument('--verbose', action='store_true', default=False,
 
 args = parser.parse_args()
 
-args.vendors = [v for vendor in args.vendors for v in vendor.split(",") if v.strip()]
+args.vendors = [v.lower() for vendor in args.vendors for v in vendor.split(",") if v.strip()]
 #args.slugs = [s for slug in args.slugs for s in slug.split(",") if s.strip()]
 
 handle = ExceptionHandler(args)
