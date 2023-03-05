@@ -1,7 +1,7 @@
 from git import Repo, exc
 import os
 
-class GitCMD:
+class DTLRepo:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
         

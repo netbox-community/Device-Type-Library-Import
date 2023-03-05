@@ -25,7 +25,6 @@ def slugFormat(name):
 YAML_EXTENSIONS = ['yml', 'yaml']
 
 def getFiles(vendors=None):
-    
     files = []
     discoveredVendors = []
     base_path = './repo/device-types/'
