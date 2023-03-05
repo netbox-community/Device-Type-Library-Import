@@ -39,14 +39,14 @@ class DTLRepo:
 
     def pull_repo(self):
         try:
-            print("Package devicetype-library is already installed, "
+            self.handle.log("Package devicetype-library is already installed, "
                     + f"updating {self.get_absolute_path()}")
             self.repo = Repo(self.repo_path)
             if not self.repo.remotes.origin.url.endswith('.git'):
                 self.handle.exception("GitInvalidRepositoryError", self.repo.remotes.origin.url, f"Origin URL {self.repo.remotes.origin.url} does not end with .git")
             self.repo.remotes.origin.pull()
             self.repo.git.checkout(self.branch)
-            print(f"Pulled Repo {self.repo.remotes.origin.url}")
+            self.handle.verbose_log(f"Pulled Repo {self.repo.remotes.origin.url}")
         except exc.GitCommandError as git_error:
             self.handle.exception("GitCommandError", self.repo.remotes.origin.url, git_error)
         except Exception as git_error:
@@ -55,7 +55,7 @@ class DTLRepo:
     def clone_repo(self):
         try:
             self.repo = Repo.clone_from(self.url, self.get_absolute_path(), branch=self.branch)
-            print(f"Package Installed {self.repo.remotes.origin.url}")
+            self.handle.log(f"Package Installed {self.repo.remotes.origin.url}")
         except exc.GitCommandError as git_error:
             self.handle.exception("GitCommandError", self.url, git_error)
         except Exception as git_error:
@@ -82,13 +82,13 @@ class DTLRepo:
                 try:
                     data = yaml.safe_load(stream)
                 except yaml.YAMLError as excep:
-                    print(excep)
+                    self.handle.verbose_log(excep)
                     continue
                 manufacturer = data['manufacturer']
                 data['manufacturer'] = {'name': manufacturer, 'slug': self.slug_format(manufacturer)}
                 
             if slugs and True not in [True if s.casefold() in data['slug'].casefold() else False for s in slugs]:
-                self.handle.log(f"Skipping {data['model']}")
+                self.handle.verbose_log(f"Skipping {data['model']}")
                 continue
 
             deviceTypes.append(data)

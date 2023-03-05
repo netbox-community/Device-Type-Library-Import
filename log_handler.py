@@ -21,6 +21,9 @@ class LogHandler:
         print(exception_dict[exception_type])
         system_exit(1)
 
-    def log(self, message):
+    def verbose_log(self, message):
         if self.args.verbose:
             print(message)
+            
+    def log(self, message):
+        print(message)

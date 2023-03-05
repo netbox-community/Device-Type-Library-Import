@@ -67,7 +67,7 @@ def read_yaml_modules(files, **kwargs):
             try:
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
+                settings.handle.verbose_log(exc)
                 continue
             manufacturer = data['manufacturer']
             data['manufacturer'] = {}
@@ -75,7 +75,7 @@ def read_yaml_modules(files, **kwargs):
             data['manufacturer']['slug'] = settings.dtl_repo.slug_format(manufacturer)
 
         if slugs and data['slug'] not in slugs:
-            print(f"Skipping {data['model']}")
+            settings.handle.verbose_log(f"Skipping {data['model']}")
             continue
 
         module_types.append(data)
@@ -88,7 +88,7 @@ def createManufacturers(vendors, nb):
     for vendor in vendors:
         try:
             manGet = all_manufacturers[vendor["name"]]
-            print(f'Manufacturer Exists: {manGet.name} - {manGet.id}')
+            settings.handle.verbose_log(f'Manufacturer Exists: {manGet.name} - {manGet.id}')
         except KeyError:
             need_manufacturers.append(vendor)
 
@@ -98,7 +98,7 @@ def createManufacturers(vendors, nb):
     try:
         manSuccess = nb.dcim.manufacturers.create(need_manufacturers)
         for man in manSuccess:
-            print(f'Manufacturer Created: {man.name} - '
+            settings.handle.verbose_log(f'Manufacturer Created: {man.name} - '
                   + f'{man.id}')
             counter.update({'manufacturer': 1})
     except pynetbox.RequestError as e:
@@ -111,7 +111,7 @@ def createInterfaces(interfaces, deviceType, nb):
     for interface in interfaces:
         try:
             ifGet = all_interfaces[interface["name"]]
-            print(f'Interface Template Exists: {ifGet.name} - {ifGet.type}'
+            settings.handle.verbose_log(f'Interface Template Exists: {ifGet.name} - {ifGet.type}'
                   + f' - {ifGet.device_type.id} - {ifGet.id}')
         except KeyError:
             interface['device_type'] = deviceType
@@ -123,7 +123,7 @@ def createInterfaces(interfaces, deviceType, nb):
     try:
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
-            print(f'Interface Template Created: {intf.name} - '
+            settings.handle.verbose_log(f'Interface Template Created: {intf.name} - '
               + f'{intf.type} - {intf.device_type.id} - '
               + f'{intf.id}')
             counter.update({'updated': 1})
@@ -136,7 +136,7 @@ def create_module_interfaces(interfaces, module_type, nb):
     for interface in interfaces:
         try:
             if_res = all_interfaces[interface["name"]]
-            print(f'Interface Template Exists: {if_res.name} - {if_res.type}'
+            settings.handle.verbose_log(f'Interface Template Exists: {if_res.name} - {if_res.type}'
                   + f' - {if_res.module_type.id} - {if_res.id}')
         except KeyError:
             interface['module_type'] = module_type
@@ -148,7 +148,7 @@ def create_module_interfaces(interfaces, module_type, nb):
     try:
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
-            print(f'Interface Template Created: {intf.name} - '
+            settings.handle.verbose_log(f'Interface Template Created: {intf.name} - '
               + f'{intf.type} - {intf.module_type.id} - '
               + f'{intf.id}')
             counter.update({'module_port_added': 1})
@@ -161,7 +161,7 @@ def createConsolePorts(consoleports, deviceType, nb):
     for consoleport in consoleports:
         try:
             cpGet = all_consoleports[consoleport["name"]]
-            print(f'Console Port Template Exists: {cpGet.name} - '
+            settings.handle.verbose_log(f'Console Port Template Exists: {cpGet.name} - '
                   + f'{cpGet.type} - {cpGet.device_type.id} - {cpGet.id}')
         except KeyError:
             consoleport['device_type'] = deviceType
@@ -173,7 +173,7 @@ def createConsolePorts(consoleports, deviceType, nb):
     try:
         cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
         for port in cpSuccess:
-            print(f'Console Port Created: {port.name} - '
+            settings.handle.verbose_log(f'Console Port Created: {port.name} - '
                   + f'{port.type} - {port.device_type.id} - '
                   + f'{port.id}')
             counter.update({'updated': 1})
@@ -187,7 +187,7 @@ def create_module_console_ports(consoleports, module_type, nb):
     for consoleport in consoleports:
         try:
             cpGet = all_consoleports[consoleport["name"]]
-            print(f'Console Port Template Exists: {cpGet.name} - '
+            settings.handle.verbose_log(f'Console Port Template Exists: {cpGet.name} - '
                   + f'{cpGet.type} - {cpGet.module_type.id} - {cpGet.id}')
         except KeyError:
             consoleport['module_type'] = module_type
@@ -199,7 +199,7 @@ def create_module_console_ports(consoleports, module_type, nb):
     try:
         cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
         for port in cpSuccess:
-            print(f'Console Port Created: {port.name} - {port.type} - ' +
+            settings.handle.verbose_log(f'Console Port Created: {port.name} - {port.type} - ' +
                 f'{port.module_type.id} - {port.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
@@ -211,7 +211,7 @@ def createPowerPorts(powerports, deviceType, nb):
     for powerport in powerports:
         try:
             ppGet = all_power_ports[powerport["name"]]
-            print(f'Power Port Template Exists: {ppGet.name} - '
+            settings.handle.verbose_log(f'Power Port Template Exists: {ppGet.name} - '
                   + f'{ppGet.type} - {ppGet.device_type.id} - {ppGet.id}')
         except KeyError:
             powerport['device_type'] = deviceType
@@ -223,7 +223,7 @@ def createPowerPorts(powerports, deviceType, nb):
     try:
         ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
         for pp in ppSuccess:
-            print(f'Interface Template Created: {pp.name} - '
+            settings.handle.verbose_log(f'Interface Template Created: {pp.name} - '
               + f'{pp.type} - {pp.device_type.id} - '
               + f'{pp.id}')
             counter.update({'updated': 1})
@@ -236,7 +236,7 @@ def create_module_power_ports(powerports, module_type, nb):
     for powerport in powerports:
         try:
             ppGet = all_power_ports[powerport["name"]]
-            print(f'Power Port Template Exists: {ppGet.name} - ' +
+            settings.handle.verbose_log(f'Power Port Template Exists: {ppGet.name} - ' +
                 f'{ppGet.type} - {ppGet.module_type.id} - {ppGet.id}')
         except KeyError:
             powerport['module_type'] = module_type
@@ -248,7 +248,7 @@ def create_module_power_ports(powerports, module_type, nb):
     try:
         ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
         for pp in ppSuccess:
-            print(f'Power port template created: {pp.name} - '
+            settings.handle.verbose_log(f'Power port template created: {pp.name} - '
               + f'{pp.type} - {pp.module_type.id} - {pp.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
@@ -260,7 +260,7 @@ def createConsoleServerPorts(consoleserverports, deviceType, nb):
     for csport in consoleserverports:
         try:
             cspGet = all_consoleserverports[csport["name"]]
-            print(f'Console Server Port Template Exists: {cspGet.name} - '
+            settings.handle.verbose_log(f'Console Server Port Template Exists: {cspGet.name} - '
                   + f'{cspGet.type} - {cspGet.device_type.id} - '
                   + f'{cspGet.id}')
         except KeyError:
@@ -274,7 +274,7 @@ def createConsoleServerPorts(consoleserverports, deviceType, nb):
         cspSuccess = nb.dcim.console_server_port_templates.create(
             need_consoleserverports)
         for csp in cspSuccess:
-            print(f'Console Server Port Created: {csp.name} - '
+            settings.handle.verbose_log(f'Console Server Port Created: {csp.name} - '
                   + f'{csp.type} - {csp.device_type.id} - '
                   + f'{csp.id}')
             counter.update({'updated': 1})
@@ -287,7 +287,7 @@ def create_module_console_server_ports(consoleserverports, module_type, nb):
     for csport in consoleserverports:
         try:
             cspGet = all_consoleserverports[csport["name"]]
-            print(f'Console Server Port Template Exists: {cspGet.name} - '
+            settings.handle.verbose_log(f'Console Server Port Template Exists: {cspGet.name} - '
                   + f'{cspGet.type} - {cspGet.module_type.id} - '
                   + f'{cspGet.id}')
         except KeyError:
@@ -301,7 +301,7 @@ def create_module_console_server_ports(consoleserverports, module_type, nb):
         cspSuccess = nb.dcim.console_server_port_templates.create(
             need_consoleserverports)
         for csp in cspSuccess:
-            print(f'Console Server Port Created: {csp.name} - '
+            settings.handle.verbose_log(f'Console Server Port Created: {csp.name} - '
                   + f'{csp.type} - {csp.module_type.id} - '
                   + f'{csp.id}')
             counter.update({'module_port_added': 1})
@@ -314,7 +314,7 @@ def createFrontPorts(frontports, deviceType, nb):
     for frontport in frontports:
         try:
             fpGet = all_frontports[frontport["name"]]
-            print(f'Front Port Template Exists: {fpGet.name} - '
+            settings.handle.verbose_log(f'Front Port Template Exists: {fpGet.name} - '
                   + f'{fpGet.type} - {fpGet.device_type.id} - {fpGet.id}')
         except KeyError:
             frontport['device_type'] = deviceType
@@ -335,7 +335,7 @@ def createFrontPorts(frontports, deviceType, nb):
     try:
         fpSuccess = nb.dcim.front_port_templates.create(need_frontports)
         for fp in fpSuccess:
-            print(f'Front Port Created: {fp.name} - '
+            settings.handle.verbose_log(f'Front Port Created: {fp.name} - '
                   + f'{fp.type} - {fp.device_type.id} - '
                   + f'{fp.id}')
             counter.update({'updated': 1})
@@ -348,7 +348,7 @@ def create_module_front_ports(frontports, module_type, nb):
     for frontport in frontports:
         try:
             fpGet = all_frontports[frontport["name"]]
-            print(f'Front Port Template Exists: {fpGet.name} - '
+            settings.handle.verbose_log(f'Front Port Template Exists: {fpGet.name} - '
                   + f'{fpGet.type} - {fpGet.module_type.id} - {fpGet.id}')
         except KeyError:
             frontport['module_type'] = module_type
@@ -369,7 +369,7 @@ def create_module_front_ports(frontports, module_type, nb):
     try:
         fpSuccess = nb.dcim.front_port_templates.create(need_frontports)
         for fp in fpSuccess:
-            print(f'Front Port Created: {fp.name} - '
+            settings.handle.verbose_log(f'Front Port Created: {fp.name} - '
                   + f'{fp.type} - {fp.module_type.id} - '
                   + f'{fp.id}')
             counter.update({'module_port_added': 1})
@@ -382,7 +382,7 @@ def createRearPorts(rearports, deviceType, nb):
     for rearport in rearports:
         try:
             rpGet = all_rearports[rearport["name"]]
-            print(f'Rear Port Template Exists: {rpGet.name} - {rpGet.type}'
+            settings.handle.verbose_log(f'Rear Port Template Exists: {rpGet.name} - {rpGet.type}'
                   + f' - {rpGet.device_type.id} - {rpGet.id}')
         except KeyError:
             rearport['device_type'] = deviceType
@@ -395,7 +395,7 @@ def createRearPorts(rearports, deviceType, nb):
         rpSuccess = nb.dcim.rear_port_templates.create(
             need_rearports)
         for rp in rpSuccess:
-            print(f'Rear Port Created: {rp.name} - {rp.type}'
+            settings.handle.verbose_log(f'Rear Port Created: {rp.name} - {rp.type}'
                   + f' - {rp.device_type.id} - {rp.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
@@ -407,7 +407,7 @@ def create_module_rear_ports(rearports, module_type, nb):
     for rearport in rearports:
         try:
             rpGet = all_rearports[rearport["name"]]
-            print(f'Rear Port Template Exists: {rpGet.name} - {rpGet.type}'
+            settings.handle.verbose_log(f'Rear Port Template Exists: {rpGet.name} - {rpGet.type}'
                   + f' - {rpGet.module_type.id} - {rpGet.id}')
         except KeyError:
             rearport['module_type'] = module_type
@@ -420,7 +420,7 @@ def create_module_rear_ports(rearports, module_type, nb):
         rpSuccess = nb.dcim.rear_port_templates.create(
             need_rearports)
         for rp in rpSuccess:
-            print(f'Rear Port Created: {rp.name} - {rp.type}'
+            settings.handle.verbose_log(f'Rear Port Created: {rp.name} - {rp.type}'
                   + f' - {rp.module_type.id} - {rp.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
@@ -432,7 +432,7 @@ def createDeviceBays(devicebays, deviceType, nb):
     for devicebay in devicebays:
         try:
             dbGet = all_devicebays[devicebay["name"]]
-            print(f'Device Bay Template Exists: {dbGet.name} - '
+            settings.handle.verbose_log(f'Device Bay Template Exists: {dbGet.name} - '
                   + f'{dbGet.device_type.id} - {dbGet.id}')
         except KeyError:
             devicebay['device_type'] = deviceType
@@ -444,7 +444,7 @@ def createDeviceBays(devicebays, deviceType, nb):
     try:
         dbSuccess = nb.dcim.device_bay_templates.create(need_devicebays)
         for db in dbSuccess:
-            print(f'Device Bay Created: {db.name} - '
+            settings.handle.verbose_log(f'Device Bay Created: {db.name} - '
                   + f'{db.device_type.id} - {db.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
@@ -468,7 +468,7 @@ def create_module_bays(module_bays, device_type, nb):
     for module_bay in module_bays:
         try:
             dbGet = all_module_bays[module_bay["name"]]
-            print(f'Module Bay Template Exists: {dbGet.name} - '
+            settings.handle.verbose_log(f'Module Bay Template Exists: {dbGet.name} - '
                   + f'{dbGet.device_type.id} - {dbGet.id}')
         except KeyError:
             module_bay['device_type'] = device_type
@@ -480,7 +480,7 @@ def create_module_bays(module_bays, device_type, nb):
     try:
         module_bay_res = nb.dcim.module_bay_templates.create(need_module_bays)
         for module_bay in module_bay_res:
-            print(f'Module Bay Created: {module_bay.name} - '
+            settings.handle.verbose_log(f'Module Bay Created: {module_bay.name} - '
                   + f'{module_bay.device_type.id} - {module_bay.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
@@ -493,7 +493,7 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
     for poweroutlet in poweroutlets:
         try:
             poGet = all_poweroutlets[poweroutlet["name"]]
-            print(f'Power Outlet Template Exists: {poGet.name} - '
+            settings.handle.verbose_log(f'Power Outlet Template Exists: {poGet.name} - '
                   + f'{poGet.type} - {poGet.device_type.id} - {poGet.id}')
         except KeyError:
             poweroutlet["device_type"] = deviceType
@@ -514,7 +514,7 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
         poSuccess = nb.dcim.power_outlet_templates.create(
             need_poweroutlets)
         for po in poSuccess:
-            print(f'Power Outlet Created: {po.name} - '
+            settings.handle.verbose_log(f'Power Outlet Created: {po.name} - '
                   + f'{po.type} - {po.device_type.id} - '
                   + f'{po.id}')
             counter.update({'updated': 1})
@@ -540,7 +540,7 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     for poweroutlet in poweroutlets:
         try:
             poGet = all_poweroutlets[poweroutlet["name"]]
-            print(f'Power Outlet Template Exists: {poGet.name} - {poGet.type}'
+            settings.handle.verbose_log(f'Power Outlet Template Exists: {poGet.name} - {poGet.type}'
                   + f' - {poGet.module_type.id} - {poGet.id}')
         except KeyError:
             poweroutlet["module_type"] = module_type
@@ -562,7 +562,7 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
         poSuccess = nb.dcim.power_outlet_templates.create(
             need_poweroutlets)
         for po in poSuccess:
-            print(f'Power Outlet Created: {po.name} - '
+            settings.handle.verbose_log(f'Power Outlet Created: {po.name} - '
                   + f'{po.type} - {po.module_type.id} - '
                   + f'{po.id}')
             counter.update({'module_port_added': 1})
@@ -574,13 +574,13 @@ def createDeviceTypes(deviceTypes, nb):
     for deviceType in deviceTypes:
         try:
             dt = all_device_types[deviceType["model"]]
-            print(f'Device Type Exists: {dt.manufacturer.name} - '
+            settings.handle.verbose_log(f'Device Type Exists: {dt.manufacturer.name} - '
                   + f'{dt.model} - {dt.id}')
         except KeyError:
             try:
                 dt = nb.dcim.device_types.create(deviceType)
                 counter.update({'added': 1})
-                print(f'Device Type Created: {dt.manufacturer.name} - '
+                settings.handle.verbose_log(f'Device Type Created: {dt.manufacturer.name} - '
                       + f'{dt.model} - {dt.id}')
             except pynetbox.RequestError as e:
                 print(e.error)
@@ -638,13 +638,13 @@ def create_module_types(module_types, nb):
     for curr_mt in module_types:
         try:
             module_type_res = all_module_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
-            print(f'Module Type Exists: {module_type_res.manufacturer.name} - '
+            settings.handle.verbose_log(f'Module Type Exists: {module_type_res.manufacturer.name} - '
                 + f'{module_type_res.model} - {module_type_res.id}')
         except KeyError:
             try:
                 module_type_res = nb.dcim.module_types.create(curr_mt)
                 counter.update({'module_added': 1})
-                print(f'Module Type Created: {module_type_res.manufacturer.name} - '
+                settings.handle.verbose_log(f'Module Type Created: {module_type_res.manufacturer.name} - '
                       + f'{module_type_res.model} - {module_type_res.id}')
             except pynetbox.RequestError as exce:
                 print(f"Error '{exce.error}' creating module type: " +
@@ -682,35 +682,35 @@ def main():
     nb = netbox.get_api()
     files, vendors = settings.dtl_repo.get_devices(args.vendors)
 
-    print(f"{len(vendors)} Vendors Found")
+    settings.handle.log(f'{len(vendors)} Vendors Found')
     deviceTypes = settings.dtl_repo.parse_files(files, slugs=args.slugs)
-    print(f"{len(deviceTypes)} Device-Types Found")
+    settings.handle.log(f'{len(deviceTypes)} Device-Types Found')
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
 
     if settings.NETBOX_FEATURES['modules']:
         if not args.vendors:
-            print("No Vendors Specified, Gathering All Module-Types")
+            settings.handle.verbose_log('No Vendors Specified, Gathering All Module-Types')
             files, vendors = get_files_modules()
         else:
-            print("Vendor Specified, Gathering All Matching Module-Types")
+            settings.handle.verbose_log('Vendor Specified, Gathering All Matching Module-Types')
             files, vendors = get_files_modules(args.vendors)
 
 
-        print(str(len(vendors)) + " Module Vendors Found")
+        settings.handle.log(f'{len(vendors)} Module Vendors Found')
         module_types = read_yaml_modules(files, slugs=args.slugs)
-        print(str(len(module_types)) + " Module-Types Found")
+        settings.handle.log(f'{len(module_types)} Module-Types Found')
         createManufacturers(vendors, nb)
         create_module_types(module_types, nb)
 
-    print('---')
-    print('Script took {} to run'.format(datetime.now() - startTime))
-    print('{} devices created'.format(counter['added']))
-    print('{} interfaces/ports updated'.format(counter['updated']))
-    print('{} manufacturers created'.format(counter['manufacturer']))
+    settings.handle.log('---')
+    settings.handle.verbose_log(f'Script took {(datetime.now() - startTime)} to run')
+    settings.handle.log(f'{counter["added"]} devices created')
+    settings.handle.log(f'{counter["updated"]} interfaces/ports updated')
+    settings.handle.log(f'{counter["manufacturer"]} manufacturers created')
     if settings.NETBOX_FEATURES['modules']:
-        print(f"{counter['module_added']} modules created")
-        print(f"{counter['module_port_added']} module interface / ports created")
+        settings.handle.log(f'{counter["module_added"]} modules created')
+        settings.handle.log(f'{counter["module_port_added"]} module interface / ports created')
 
 if __name__ == "__main__":
     main()
