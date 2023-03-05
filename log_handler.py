@@ -1,5 +1,6 @@
 from sys import exit as system_exit
-class ExceptionHandler:
+
+class LogHandler:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
         
@@ -20,3 +21,6 @@ class ExceptionHandler:
         print(exception_dict[exception_type])
         system_exit(1)
 
+    def log(self, message):
+        if self.args.verbose:
+            print(message)

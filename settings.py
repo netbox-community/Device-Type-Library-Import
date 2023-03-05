@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 import os
-from exception_handler import ExceptionHandler
+from log_handler import LogHandler
 from repo import DTLRepo
 from dotenv import load_dotenv
 load_dotenv()
@@ -38,9 +38,9 @@ parser.add_argument('--verbose', action='store_true', default=False,
 args = parser.parse_args()
 
 args.vendors = [v.lower() for vendor in args.vendors for v in vendor.split(",") if v.strip()]
-#args.slugs = [s for slug in args.slugs for s in slug.split(",") if s.strip()]
+args.slugs = [s for slug in args.slugs for s in slug.split(",") if s.strip()]
 
-handle = ExceptionHandler(args)
+handle = LogHandler(args)
 # Evaluate environment variables and exit if one of the mandatory ones are not set
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 for var in MANDATORY_ENV_VARS:

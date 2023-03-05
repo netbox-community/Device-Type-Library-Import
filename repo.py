@@ -2,6 +2,7 @@ import os
 from glob import glob
 from re import sub as re_sub
 from git import Repo, exc
+import yaml
 
 class DTLRepo:
     def __new__(cls, *args, **kwargs):
@@ -60,7 +61,7 @@ class DTLRepo:
         except Exception as git_error:
             self.handle.exception("Exception", 'Git Repository Error', git_error)
 
-    def get_files(self, vendors:list = None):
+    def get_devices(self, vendors:list = None):
         files = []
         discovered_vendors = []
         base_path = './repo/device-types/'
@@ -73,3 +74,22 @@ class DTLRepo:
                 for extension in self.yaml_extensions:
                     files.extend(glob(base_path + folder + f'/*.{extension}'))
         return files, discovered_vendors
+    
+    def parse_files(self, files:list, slugs:list = None):
+        deviceTypes = []
+        for file in files:
+            with open(file, 'r') as stream:
+                try:
+                    data = yaml.safe_load(stream)
+                except yaml.YAMLError as excep:
+                    print(excep)
+                    continue
+                manufacturer = data['manufacturer']
+                data['manufacturer'] = {'name': manufacturer, 'slug': self.slug_format(manufacturer)}
+                
+            if slugs and True not in [True if s.casefold() in data['slug'].casefold() else False for s in slugs]:
+                self.handle.log(f"Skipping {data['model']}")
+                continue
+
+            deviceTypes.append(data)
+        return deviceTypes

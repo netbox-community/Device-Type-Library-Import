@@ -57,30 +57,6 @@ def get_files_modules(vendors=None):
 
     return files, discoveredVendors
 
-def readYAMl(files, **kwargs):
-    slugs = kwargs.get('slugs', None)
-    deviceTypes = []
-    manufacturers = []
-    for file in files:
-        with open(file, 'r') as stream:
-            try:
-                data = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-                continue
-            manufacturer = data['manufacturer']
-            data['manufacturer'] = {}
-            data['manufacturer']['name'] = manufacturer
-            data['manufacturer']['slug'] = settings.dtl_repo.slug_format(manufacturer)
-
-        if slugs and data['slug'] not in slugs:
-            print(f"Skipping {data['model']}")
-            continue
-
-        deviceTypes.append(data)
-        manufacturers.append(manufacturer)
-    return deviceTypes
-
 def read_yaml_modules(files, **kwargs):
 
     slugs = kwargs.get('slugs', None)
@@ -704,18 +680,11 @@ def main():
 
     netbox = NetBox(settings)
     nb = netbox.get_api()
+    files, vendors = settings.dtl_repo.get_devices(args.vendors)
 
-    if not args.vendors:
-        print("No Vendors Specified, Gathering All Device-Types")
-        files, vendors = settings.dtl_repo.get_files()
-    else:
-        print("Vendor Specified, Gathering All Matching Device-Types")
-        files, vendors = settings.dtl_repo.get_files(args.vendors)
-
-
-    print(str(len(vendors)) + " Vendors Found")
-    deviceTypes = readYAMl(files, slugs=args.slugs)
-    print(str(len(deviceTypes)) + " Device-Types Found")
+    print(f"{len(vendors)} Vendors Found")
+    deviceTypes = settings.dtl_repo.parse_files(files, slugs=args.slugs)
+    print(f"{len(deviceTypes)} Device-Types Found")
     createManufacturers(vendors, nb)
     createDeviceTypes(deviceTypes, nb)
 
