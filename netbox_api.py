@@ -24,6 +24,7 @@ class NetBox:
         self.connect_api()
         self.verify_compatibility()
         self.existing_manufacturers = self.get_manufacturers()
+        self.device_types = DeviceTypes(self.netbox, self.handle, self.counter)
         
     def connect_api(self):
         try:
@@ -73,3 +74,34 @@ class NetBox:
             except pynetbox.RequestError as request_error:
                 self.handle.log("Error creating manufacturers")
                 self.handle.verbose_log(f"Error during manufacturer creation. - {request_error.error}")
+                
+class DeviceTypes:
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+        
+    def __init__(self, netbox, handle, counter):
+        self.netbox = netbox
+        self.handle = handle
+        self.counter = counter
+        self.existing_device_types = self.get_device_types()
+        
+    def get_device_types(self):
+        return {str(item): item for item in self.netbox.dcim.device_types.all()}
+    
+    def create_interfaces(self, interfaces, deviceType, nb):
+        existing_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(devicetype_id=deviceType)}
+        to_create = [interface for interface in interfaces if interface['name'] not in existing_interfaces]
+        
+        for interface in to_create:
+            interface['device_type'] = deviceType
+
+        if to_create:
+            try:
+                ifSuccess = nb.dcim.interface_templates.create(to_create)
+                for intf in ifSuccess:
+                    self.handle.verbose_log(f'Interface Template Created: {intf.name} - '
+                    + f'{intf.type} - {intf.device_type.id} - '
+                    + f'{intf.id}')
+                    self.counter.update({'updated': 1})
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Interface")

@@ -61,10 +61,9 @@ class DTLRepo:
         except Exception as git_error:
             self.handle.exception("Exception", 'Git Repository Error', git_error)
 
-    def get_devices(self, vendors:list = None):
+    def get_devices(self, base_path, vendors:list = None):
         files = []
         discovered_vendors = []
-        base_path = './repo/device-types/'
         vendor_dirs = os.listdir(base_path)
         # try:
         for folder in [vendor for vendor in vendor_dirs if not vendors or vendor.casefold() in vendors]:

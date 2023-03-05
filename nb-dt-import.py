@@ -117,7 +117,7 @@ def create_module_interfaces(interfaces, module_type, nb):
     for interface in interfaces:
         try:
             if_res = all_interfaces[interface["name"]]
-            settings.handle.verbose_log(f'Interface Template Exists: {if_res.name} - {if_res.type}'
+            settings.handle.verbose_log(f'Module Interface Template Exists: {if_res.name} - {if_res.type}'
                   + f' - {if_res.module_type.id} - {if_res.id}')
         except KeyError:
             interface['module_type'] = module_type
@@ -129,7 +129,7 @@ def create_module_interfaces(interfaces, module_type, nb):
     try:
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
-            settings.handle.verbose_log(f'Interface Template Created: {intf.name} - '
+            settings.handle.verbose_log(f'Module Interface Template Created: {intf.name} - '
               + f'{intf.type} - {intf.module_type.id} - '
               + f'{intf.id}')
             counter.update({'module_port_added': 1})
@@ -204,7 +204,7 @@ def createPowerPorts(powerports, deviceType, nb):
     try:
         ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
         for pp in ppSuccess:
-            settings.handle.verbose_log(f'Interface Template Created: {pp.name} - '
+            settings.handle.verbose_log(f'Power Port Template Created: {pp.name} - '
               + f'{pp.type} - {pp.device_type.id} - '
               + f'{pp.id}')
             counter.update({'updated': 1})
@@ -550,9 +550,10 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
-def createDeviceTypes(deviceTypes, nb):
-    all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
-    for deviceType in deviceTypes:
+def create_device_types(device_types, netbox):
+    all_device_types = netbox.device_types.existing_device_types
+    nb = netbox.netbox
+    for deviceType in device_types:
         try:
             dt = all_device_types[deviceType["model"]]
             settings.handle.verbose_log(f'Device Type Exists: {dt.manufacturer.name} - '
@@ -567,7 +568,7 @@ def createDeviceTypes(deviceTypes, nb):
                 print(e.error)
 
         if "interfaces" in deviceType:
-            createInterfaces(deviceType["interfaces"],
+            netbox.device_types.create_interfaces(deviceType["interfaces"],
                              dt.id, nb)
         if "power-ports" in deviceType:
             createPowerPorts(deviceType["power-ports"],
@@ -661,25 +662,19 @@ def main():
 
     netbox = NetBox(settings)
     nb = netbox.get_api()
-    files, vendors = settings.dtl_repo.get_devices(args.vendors)
+    files, vendors = settings.dtl_repo.get_devices('./repo/device-types/', args.vendors)
 
     settings.handle.log(f'{len(vendors)} Vendors Found')
-    deviceTypes = settings.dtl_repo.parse_files(files, slugs=args.slugs)
-    settings.handle.log(f'{len(deviceTypes)} Device-Types Found')
+    device_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
+    settings.handle.log(f'{len(device_types)} Device-Types Found')
     netbox.create_manufacturers(vendors)
-    createDeviceTypes(deviceTypes, nb)
+    create_device_types(device_types, netbox)
 
-    if settings.NETBOX_FEATURES['modules']:
-        if not args.vendors:
-            settings.handle.verbose_log('No Vendors Specified, Gathering All Module-Types')
-            files, vendors = get_files_modules()
-        else:
-            settings.handle.verbose_log('Vendor Specified, Gathering All Matching Module-Types')
-            files, vendors = get_files_modules(args.vendors)
-
-
+    if netbox.modules:
+        settings.handle.log("Modules Enabled. Creating Modules...")
+        files, vendors = settings.dtl_repo.get_devices('./repo/module-types/', args.vendors)
         settings.handle.log(f'{len(vendors)} Module Vendors Found')
-        module_types = read_yaml_modules(files, slugs=args.slugs)
+        module_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
         settings.handle.log(f'{len(module_types)} Module-Types Found')
         netbox.create_manufacturers(vendors)
         create_module_types(module_types, nb)
