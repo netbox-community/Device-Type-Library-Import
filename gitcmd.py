@@ -17,12 +17,17 @@ class GitCMD:
             self.pull_repo()
         else:
             self.clone_repo()
-            
+    
+    def get_relative_path(self):
+        return self.repo_path
+    
+    def get_absolute_path(self):
+        return os.path.join(self.cwd, self.repo_path)
         
     def pull_repo(self):
         try:
             print("Package devicetype-library is already installed, "
-                    + f"updating {os.path.join(self.cwd, self.repo_path)}")
+                    + f"updating {self.get_absolute_path()}")
             self.repo = Repo(self.repo_path)
             if not self.repo.remotes.origin.url.endswith('.git'):
                 self.handle.exception("GitInvalidRepositoryError", self.repo.remotes.origin.url, f"Origin URL {self.repo.remotes.origin.url} does not end with .git")
@@ -36,7 +41,7 @@ class GitCMD:
         
     def clone_repo(self):
         try:
-            self.repo = Repo.clone_from(self.url, os.path.join(self.cwd, self.repo_path), branch=self.branch)
+            self.repo = Repo.clone_from(self.url, self.get_absolute_path(), branch=self.branch)
             print(f"Package Installed {self.repo.remotes.origin.url}")
         except exc.GitCommandError as git_error:
             self.handle.exception("GitCommandError", self.url, git_error)
