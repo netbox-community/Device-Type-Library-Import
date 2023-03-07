@@ -17,45 +17,6 @@ counter = Counter(
             module_port_added=0,
         )
 
-def get_files_modules(vendors=None):
-    '''Get files list for modules.
-
-    Args:
-        vendors: List of vendors to sync or None to sync all vendors.
-
-    Returns:
-        A 2-tuple of:
-        - list of filenames found
-        - list of vendors found
-
-    '''
-
-    files = []
-    discoveredVendors = []
-    base_path = './repo/module-types/'
-    if vendors:
-        for r, d, f in os.walk(base_path):
-            for folder in d:
-                for vendor in vendors:
-                    if vendor.lower() == folder.lower():
-                        discoveredVendors.append({'name': folder,
-                                                  'slug': settings.dtl_repo.slug_format(folder)})
-                        for extension in settings.dtl_repo.yaml_extensions:
-                            files.extend(
-                                glob(
-                                    base_path + folder + f'/*.{extension}'
-                                )
-                            )
-    else:
-        for r, d, f in os.walk(base_path):
-            for folder in d:
-                if folder.lower() != "Testing":
-                    discoveredVendors.append({'name': folder,
-                                              'slug': settings.dtl_repo.slug_format(folder)})
-        for extension in settings.dtl_repo.yaml_extensions:
-            files.extend(glob(base_path + f'[!Testing]*/*.{extension}'))
-
-    return files, discoveredVendors
 
 def read_yaml_modules(files, **kwargs):
 
@@ -662,7 +623,7 @@ def main():
 
     netbox = NetBox(settings)
     nb = netbox.get_api()
-    files, vendors = settings.dtl_repo.get_devices('./repo/device-types/', args.vendors)
+    files, vendors = settings.dtl_repo.get_devices(f'{settings.dtl_repo.repo_path}/device-types/', args.vendors)
 
     settings.handle.log(f'{len(vendors)} Vendors Found')
     device_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
@@ -672,7 +633,7 @@ def main():
 
     if netbox.modules:
         settings.handle.log("Modules Enabled. Creating Modules...")
-        files, vendors = settings.dtl_repo.get_devices('./repo/module-types/', args.vendors)
+        files, vendors = settings.dtl_repo.get_devices(f'{settings.dtl_repo.repo_path}/module-types/', args.vendors)
         settings.handle.log(f'{len(vendors)} Module Vendors Found')
         module_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
         settings.handle.log(f'{len(module_types)} Module-Types Found')
