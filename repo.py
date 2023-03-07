@@ -65,7 +65,7 @@ class DTLRepo:
         files = []
         discovered_vendors = []
         vendor_dirs = os.listdir(base_path)
-        # try:
+        
         for folder in [vendor for vendor in vendor_dirs if not vendors or vendor.casefold() in vendors]:
             if folder.casefold() is not "testing":
                 discovered_vendors.append({'name': folder,

@@ -56,6 +56,7 @@ class NetBox:
             
     def create_manufacturers(self, vendors):
         to_create = []
+        self.existing_manufacturers = self.get_manufacturers()
         for vendor in vendors:
             try:
                 manGet = self.existing_manufacturers[vendor["name"]]
