@@ -53,7 +53,7 @@ def getFiles(vendors=None):
     
     files = []
     discoveredVendors = []
-    base_path = './repo/device-types/'
+    base_path = f'{settings.REPO_PATH}/device-types/'
     if vendors:
         for r, d, f in os.walk(base_path):
             for folder in d:
@@ -88,7 +88,7 @@ def get_files_modules(vendors=None):
 
     files = []
     discoveredVendors = []
-    base_path = './repo/module-types/'
+    base_path = f'{settings.REPO_PATH}/module-types/'
     if vendors:
         for r, d, f in os.walk(base_path):
             for folder in d:
