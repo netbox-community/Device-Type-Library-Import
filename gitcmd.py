@@ -11,7 +11,6 @@ class GitCMD:
         self.url = args.url
         self.repo_path = repo_path
         self.branch = args.branch
-        self.repo = Repo()
         self.cwd = os.getcwd()
         
         if os.path.isdir(self.repo_path):
