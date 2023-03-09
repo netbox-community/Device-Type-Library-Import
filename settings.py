@@ -37,7 +37,8 @@ parser.add_argument('--verbose', action='store_true', default=False,
 
 args = parser.parse_args()
 
-args.vendors = [v.lower() for vendor in args.vendors for v in vendor.split(",") if v.strip()]
+args.vendors = [v.casefold()
+                for vendor in args.vendors for v in vendor.split(",") if v.strip()]
 args.slugs = [s for slug in args.slugs for s in slug.split(",") if s.strip()]
 
 handle = LogHandler(args)
@@ -45,6 +46,7 @@ handle = LogHandler(args)
 MANDATORY_ENV_VARS = ["REPO_URL", "NETBOX_URL", "NETBOX_TOKEN"]
 for var in MANDATORY_ENV_VARS:
     if var not in os.environ:
-        handle.exception("EnvironmentError", var, f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
+        handle.exception("EnvironmentError", var,
+                         f'Environment variable "{var}" is not set.\n\nMANDATORY_ENV_VARS: {str(MANDATORY_ENV_VARS)}.\n\nCURRENT_ENV_VARS: {str(os.environ)}')
 
 dtl_repo = DTLRepo(args, REPO_PATH, handle)
