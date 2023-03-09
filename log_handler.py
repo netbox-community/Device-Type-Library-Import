@@ -1,12 +1,13 @@
 from sys import exit as system_exit
 
+
 class LogHandler:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
-        
+
     def __init__(self, args):
         self.args = args
-        
+
     def exception(self, exception_type, exception, stack_trace=None):
         exception_dict = {
             "EnvironmentError": f'Environment variable "{exception}" is not set.',
@@ -24,18 +25,18 @@ class LogHandler:
     def verbose_log(self, message):
         if self.args.verbose:
             print(message)
-            
+
     def log(self, message):
         print(message)
-        
-    def log_device_ports_created(self, created_ports:list = [], port_type:str = "port"):
+
+    def log_device_ports_created(self, created_ports: list = [], port_type: str = "port"):
         for port in created_ports:
             self.verbose_log(f'{port_type} Template Created: {port.name} - '
                              + f'{port.type if hasattr(port, "type") else ""} - {port.device_type.id} - '
                              + f'{port.id}')
         return len(created_ports)
-    
-    def log_module_ports_created(self, created_ports:list = [], port_type:str = "port"):
+
+    def log_module_ports_created(self, created_ports: list = [], port_type: str = "port"):
         for port in created_ports:
             self.verbose_log(f'{port_type} Template Created: {port.name} - '
                              + f'{port.type if hasattr(port, "type") else ""} - {port.module_type.id} - '
