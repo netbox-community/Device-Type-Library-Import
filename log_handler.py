@@ -27,3 +27,10 @@ class LogHandler:
             
     def log(self, message):
         print(message)
+        
+    def log_ports_created(self, created_ports:list = [], port_type:str = "port"):
+        for port in created_ports:
+            self.verbose_log(f'{port_type} Template Created: {port.name} - '
+                             + f'{port.type if hasattr(port, "type") else ""} - {port.device_type.id} - '
+                             + f'{port.id}')
+        return len(created_ports)

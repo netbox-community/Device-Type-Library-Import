@@ -88,21 +88,154 @@ class DeviceTypes:
         
     def get_device_types(self):
         return {str(item): item for item in self.netbox.dcim.device_types.all()}
+
+    def get_power_ports(self, device_type):
+        return {str(item): item for item in self.netbox.dcim.power_port_templates.filter(devicetype_id=device_type)}
     
-    def create_interfaces(self, interfaces, deviceType, nb):
-        existing_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(devicetype_id=deviceType)}
-        to_create = [interface for interface in interfaces if interface['name'] not in existing_interfaces]
-        
-        for interface in to_create:
-            interface['device_type'] = deviceType
+    def get_rear_ports(self, device_type):
+        return {str(item): item for item in self.netbox.dcim.rear_port_templates.filter(devicetype_id=device_type)}
+    
+    def get_ports_to_create(self, dcim_ports, device_type, existing_ports):
+        to_create = [port for port in dcim_ports if port['name'] not in existing_ports]
+        for port in to_create:
+            port['device_type'] = device_type
+            
+        return to_create
+    
+    def create_interfaces(self, interfaces, device_type):
+        existing_interfaces = {str(item): item for item in self.netbox.dcim.interface_templates.filter(
+            devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(
+            interfaces, device_type, existing_interfaces)
 
         if to_create:
             try:
-                ifSuccess = nb.dcim.interface_templates.create(to_create)
-                for intf in ifSuccess:
-                    self.handle.verbose_log(f'Interface Template Created: {intf.name} - '
-                    + f'{intf.type} - {intf.device_type.id} - '
-                    + f'{intf.id}')
-                    self.counter.update({'updated': 1})
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.interface_templates.create(to_create), "Interface")
+                                     })
             except pynetbox.RequestError as excep:
                 self.handle.log(f"Error '{excep.error}' creating Interface")
+                
+    def create_power_ports(self, power_ports, device_type):
+        existing_power_ports = self.get_power_ports(device_type)
+        to_create = self.get_ports_to_create(power_ports, device_type, existing_power_ports)
+        
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.power_port_templates.create(to_create), "Power Port")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Power Port")
+                
+    def create_console_ports(self, console_ports, device_type):
+        existing_console_ports = {str(item): item for item in self.netbox.dcim.console_port_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(console_ports, device_type, existing_console_ports)
+        
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.console_port_templates.create(to_create), "Console Port")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Console Port")
+
+    def create_power_outlets(self, power_outlets, device_type):
+        existing_power_outlets = {str(item): item for item in self.netbox.dcim.power_outlet_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(power_outlets, device_type, existing_power_outlets)
+
+        if to_create:
+            existing_power_ports = self.get_power_ports(device_type)
+            for outlet in to_create:
+                try:
+                    power_port = existing_power_ports[outlet["power_port"]]
+                    outlet['power_port'] = power_port.id
+                except KeyError:
+                    pass
+                
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.power_outlet_templates.create(to_create), "Power Outlet")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Power Outlet")
+
+    def create_console_server_ports(self, console_server_ports, device_type):
+        existing_console_server_ports = {str(item): item for item in self.netbox.dcim.console_server_port_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(console_server_ports, device_type, existing_console_server_ports)
+
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.console_server_port_templates.create(to_create), "Console Server Port")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Console Server Port")
+
+    def create_rear_ports(self, rear_ports, device_type):
+        existing_rear_ports = self.get_rear_ports(device_type)
+        to_create = self.get_ports_to_create(rear_ports, device_type, existing_rear_ports)
+
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.rear_port_templates.create(to_create), "Rear Port")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Rear Port")
+
+    def create_front_ports(self, front_ports, device_type):
+        existing_front_ports = {str(item): item for item in self.netbox.dcim.front_port_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(front_ports, device_type, existing_front_ports)
+        
+        if to_create:
+            all_rearports = self.get_rear_ports(device_type)
+            for port in to_create:
+                try:
+                    rear_port = all_rearports[port["rear_port"]]
+                    port['rear_port'] = rear_port.id
+                except KeyError:
+                    print(f'Could not find Rear Port for Front Port: {port["name"]} - '
+                        + f'{port["type"]} - {device_type}')
+            
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.front_port_templates.create(to_create), "Front Port")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Front Port")
+
+    def create_device_bays(self, device_bays, device_type):
+        existing_device_bays = {str(item): item for item in self.netbox.dcim.device_bay_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(device_bays, device_type, existing_device_bays)
+        
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.device_bay_templates.create(to_create), "Device Bay")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Device Bay")
+                
+    def create_module_bays(self, module_bays, device_type):
+        existing_module_bays = {str(item): item for item in self.netbox.dcim.module_bay_templates.filter(devicetype_id=device_type)}
+        to_create = self.get_ports_to_create(module_bays, device_type, existing_module_bays)
+        
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_ports_created(
+                                         self.netbox.dcim.module_bay_templates.create(to_create), "Module Bay")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Module Bay")
+
+    
