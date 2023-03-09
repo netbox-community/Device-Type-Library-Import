@@ -4,7 +4,7 @@ from log_handler import LogHandler
 from repo import DTLRepo
 from dotenv import load_dotenv
 load_dotenv()
-print()
+
 REPO_URL = os.getenv("REPO_URL",
                      default="https://github.com/netbox-community/devicetype-library.git")
 REPO_BRANCH = os.getenv("REPO_BRANCH", default="master")
