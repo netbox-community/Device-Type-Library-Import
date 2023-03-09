@@ -75,7 +75,7 @@ class DTLRepo:
         vendor_dirs = os.listdir(base_path)
 
         for folder in [vendor for vendor in vendor_dirs if not vendors or vendor.casefold() in vendors]:
-            if folder.casefold() is not "testing":
+            if folder.casefold() != "testing":
                 discovered_vendors.append({'name': folder,
                                            'slug': self.slug_format(folder)})
                 for extension in self.yaml_extensions:
