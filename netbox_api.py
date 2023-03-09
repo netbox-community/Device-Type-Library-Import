@@ -89,7 +89,9 @@ class NetBox:
                     self.handle.verbose_log(f'Device Type Created: {dt.manufacturer.name} - '
                         + f'{dt.model} - {dt.id}')
                 except pynetbox.RequestError as e:
-                    self.handle.log(e.error)
+                    self.handle.log(f'Error {e.error} creating device type:'
+                                    f' {device_type["manufacturer"]["name"]} {device_type["model"]}')
+                    continue
 
             if "interfaces" in device_type:
                 self.device_types.create_interfaces(device_type["interfaces"], dt.id)
