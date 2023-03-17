@@ -16,6 +16,7 @@ counter = Counter(
     manufacturer=0,
     module_added=0,
     module_port_added=0,
+    images=0,
 )
 
 def determine_features(nb):
@@ -50,7 +51,7 @@ def slugFormat(name):
 YAML_EXTENSIONS = ['yml', 'yaml']
 
 def getFiles(vendors=None):
-    
+
     files = []
     discoveredVendors = []
     base_path = f'{settings.REPO_PATH}/device-types/'
@@ -129,6 +130,9 @@ def readYAMl(files, **kwargs):
             data['manufacturer']['name'] = manufacturer
             data['manufacturer']['slug'] = slugFormat(manufacturer)
 
+            # Save file location to resolve any relative paths for images
+            data['src'] = file
+
         if slugs and data['slug'] not in slugs:
             print(f"Skipping {data['model']}")
             continue
@@ -199,7 +203,7 @@ def createInterfaces(interfaces, deviceType, nb):
 
     if not need_interfaces:
         return
-    
+
     try:
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
@@ -209,7 +213,7 @@ def createInterfaces(interfaces, deviceType, nb):
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
         print(e.error)
-    
+
 def create_module_interfaces(interfaces, module_type, nb):
     all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(moduletype_id=module_type)}
     need_interfaces = []
@@ -249,7 +253,7 @@ def createConsolePorts(consoleports, deviceType, nb):
 
     if not need_consoleports:
         return
-                
+
     try:
         cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
         for port in cpSuccess:
@@ -649,9 +653,43 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+def update_images(deviceTypeId,images,src_file):
+    '''Upload front_image and/or rear_image for the given device type
+
+    Args:
+        deviceTypeId: id for the device-type to update
+        images: map of front_image and/or rear_image
+        src_file: YANG source file path, used to resolve relative paths
+
+    Returns:
+        None
+    '''
+    url = settings.NETBOX_URL + f"api/dcim/device-types/{deviceTypeId}/"
+    headers = { "Authorization": f"Token {settings.NETBOX_TOKEN}" }
+    base_dir = os.path.dirname(src_file)
+
+    files = { i: (os.path.basename(f), open(os.path.join(base_dir,f),"rb") ) 
+              for i,f in images.items() }
+    response = requests.patch(url, headers=headers, files=files)
+
+    print( f'Images {images} updated at {url}: {response}' )
+    counter["images"] += len(images)
+
 def createDeviceTypes(deviceTypes, nb):
     all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
     for deviceType in deviceTypes:
+
+        # Treat front/rear_image differently
+        saved_images = {}
+        for i in ["front_image","rear_image"]:
+            if i in deviceType:
+              saved_images[i] = deviceType[i]
+              del deviceType[i]
+
+        # Remove file base path
+        src_file = deviceType["src"]
+        del deviceType["src"]
+
         try:
             dt = all_device_types[deviceType["model"]]
             print(f'Device Type Exists: {dt.manufacturer.name} - '
@@ -695,6 +733,10 @@ def createDeviceTypes(deviceTypes, nb):
         if settings.NETBOX_FEATURES['modules'] and 'module-bays' in deviceType:
             create_module_bays(deviceType['module-bays'],
                                dt.id, nb)
+
+        # Finally, update images if any
+        if saved_images:
+            update_images(dt.id,saved_images,src_file)
 
 def create_module_types(module_types, nb):
     '''Create missing module types.
@@ -763,7 +805,7 @@ def main():
     nbUrl = settings.NETBOX_URL
     nbToken = settings.NETBOX_TOKEN
     nb = pynetbox.api(nbUrl, token=nbToken)
-    
+
     try:
         determine_features(nb)
     except requests.exceptions.SSLError as ssl_exception:
@@ -806,6 +848,7 @@ def main():
     print('---')
     print('Script took {} to run'.format(datetime.now() - startTime))
     print('{} devices created'.format(counter['added']))
+    print('{} images uploaded'.format(counter['images']))
     print('{} interfaces/ports updated'.format(counter['updated']))
     print('{} manufacturers created'.format(counter['manufacturer']))
     if settings.NETBOX_FEATURES['modules']:
