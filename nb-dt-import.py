@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 from collections import Counter
 from datetime import datetime
 import yaml
@@ -17,6 +17,7 @@ counter = Counter(
     module_added=0,
     module_port_added=0,
 )
+
 
 def determine_features(nb):
     '''Automatically determine the netbox features available.
@@ -42,15 +43,15 @@ def determine_features(nb):
         settings.NETBOX_FEATURES['modules'] = True
 
 
-
-
 def slugFormat(name):
-    return re.sub('\W+','-', name.lower())
+    return re.sub('\W+', '-', name.lower())
+
 
 YAML_EXTENSIONS = ['yml', 'yaml']
 
+
 def getFiles(vendors=None):
-    
+
     files = []
     discoveredVendors = []
     base_path = f'{settings.REPO_PATH}/device-types/'
@@ -62,7 +63,8 @@ def getFiles(vendors=None):
                         discoveredVendors.append({'name': folder,
                                                   'slug': slugFormat(folder)})
                         for extension in YAML_EXTENSIONS:
-                            files.extend(glob.glob(base_path + folder + f'/*.{extension}'))
+                            files.extend(
+                                glob.glob(base_path + folder + f'/*.{extension}'))
     else:
         for r, d, f in os.walk(base_path):
             for folder in d:
@@ -72,6 +74,7 @@ def getFiles(vendors=None):
         for extension in YAML_EXTENSIONS:
             files.extend(glob.glob(base_path + f'[!Testing]*/*.{extension}'))
     return files, discoveredVendors
+
 
 def get_files_modules(vendors=None):
     '''Get files list for modules.
@@ -113,12 +116,13 @@ def get_files_modules(vendors=None):
 
     return files, discoveredVendors
 
+
 def readYAMl(files, **kwargs):
     slugs = kwargs.get('slugs', None)
     deviceTypes = []
     manufacturers = []
     for file in files:
-        with open(file, 'r') as stream:
+        with open(file, 'rb') as stream:
             try:
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
@@ -136,6 +140,7 @@ def readYAMl(files, **kwargs):
         deviceTypes.append(data)
         manufacturers.append(manufacturer)
     return deviceTypes
+
 
 def read_yaml_modules(files, **kwargs):
 
@@ -162,8 +167,10 @@ def read_yaml_modules(files, **kwargs):
         manufacturers.append(manufacturer)
     return module_types
 
+
 def createManufacturers(vendors, nb):
-    all_manufacturers = {str(item): item for item in nb.dcim.manufacturers.all()}
+    all_manufacturers = {
+        str(item): item for item in nb.dcim.manufacturers.all()}
     need_manufacturers = []
     for vendor in vendors:
         try:
@@ -186,7 +193,8 @@ def createManufacturers(vendors, nb):
 
 
 def createInterfaces(interfaces, deviceType, nb):
-    all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(devicetype_id=deviceType)}
+    all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(
+        devicetype_id=deviceType)}
     need_interfaces = []
     for interface in interfaces:
         try:
@@ -199,19 +207,21 @@ def createInterfaces(interfaces, deviceType, nb):
 
     if not need_interfaces:
         return
-    
+
     try:
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
             print(f'Interface Template Created: {intf.name} - '
-              + f'{intf.type} - {intf.device_type.id} - '
-              + f'{intf.id}')
+                  + f'{intf.type} - {intf.device_type.id} - '
+                  + f'{intf.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
         print(e.error)
-    
+
+
 def create_module_interfaces(interfaces, module_type, nb):
-    all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(moduletype_id=module_type)}
+    all_interfaces = {str(item): item for item in nb.dcim.interface_templates.filter(
+        moduletype_id=module_type)}
     need_interfaces = []
     for interface in interfaces:
         try:
@@ -229,14 +239,16 @@ def create_module_interfaces(interfaces, module_type, nb):
         ifSuccess = nb.dcim.interface_templates.create(need_interfaces)
         for intf in ifSuccess:
             print(f'Interface Template Created: {intf.name} - '
-              + f'{intf.type} - {intf.module_type.id} - '
-              + f'{intf.id}')
+                  + f'{intf.type} - {intf.module_type.id} - '
+                  + f'{intf.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def createConsolePorts(consoleports, deviceType, nb):
-    all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(devicetype_id=deviceType)}
+    all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(
+        devicetype_id=deviceType)}
     need_consoleports = []
     for consoleport in consoleports:
         try:
@@ -249,7 +261,7 @@ def createConsolePorts(consoleports, deviceType, nb):
 
     if not need_consoleports:
         return
-                
+
     try:
         cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
         for port in cpSuccess:
@@ -260,9 +272,11 @@ def createConsolePorts(consoleports, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_console_ports(consoleports, module_type, nb):
 
-    all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(moduletype_id=module_type)}
+    all_consoleports = {str(item): item for item in nb.dcim.console_port_templates.filter(
+        moduletype_id=module_type)}
     need_consoleports = []
     for consoleport in consoleports:
         try:
@@ -280,13 +294,15 @@ def create_module_console_ports(consoleports, module_type, nb):
         cpSuccess = nb.dcim.console_port_templates.create(need_consoleports)
         for port in cpSuccess:
             print(f'Console Port Created: {port.name} - {port.type} - ' +
-                f'{port.module_type.id} - {port.id}')
+                  f'{port.module_type.id} - {port.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(f"Error creating module console port: {e.error}")
 
+
 def createPowerPorts(powerports, deviceType, nb):
-    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(devicetype_id=deviceType)}
+    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(
+        devicetype_id=deviceType)}
     need_power_ports = []
     for powerport in powerports:
         try:
@@ -304,20 +320,22 @@ def createPowerPorts(powerports, deviceType, nb):
         ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
         for pp in ppSuccess:
             print(f'Interface Template Created: {pp.name} - '
-              + f'{pp.type} - {pp.device_type.id} - '
-              + f'{pp.id}')
+                  + f'{pp.type} - {pp.device_type.id} - '
+                  + f'{pp.id}')
             counter.update({'updated': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_power_ports(powerports, module_type, nb):
-    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(moduletype_id=module_type)}
+    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(
+        moduletype_id=module_type)}
     need_power_ports = []
     for powerport in powerports:
         try:
             ppGet = all_power_ports[powerport["name"]]
             print(f'Power Port Template Exists: {ppGet.name} - ' +
-                f'{ppGet.type} - {ppGet.module_type.id} - {ppGet.id}')
+                  f'{ppGet.type} - {ppGet.module_type.id} - {ppGet.id}')
         except KeyError:
             powerport['module_type'] = module_type
             need_power_ports.append(powerport)
@@ -329,13 +347,15 @@ def create_module_power_ports(powerports, module_type, nb):
         ppSuccess = nb.dcim.power_port_templates.create(need_power_ports)
         for pp in ppSuccess:
             print(f'Power port template created: {pp.name} - '
-              + f'{pp.type} - {pp.module_type.id} - {pp.id}')
+                  + f'{pp.type} - {pp.module_type.id} - {pp.id}')
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def createConsoleServerPorts(consoleserverports, deviceType, nb):
-    all_consoleserverports = {str(item): item for item in nb.dcim.console_server_port_templates.filter(devicetype_id=deviceType)}
+    all_consoleserverports = {str(
+        item): item for item in nb.dcim.console_server_port_templates.filter(devicetype_id=deviceType)}
     need_consoleserverports = []
     for csport in consoleserverports:
         try:
@@ -361,8 +381,10 @@ def createConsoleServerPorts(consoleserverports, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_console_server_ports(consoleserverports, module_type, nb):
-    all_consoleserverports = {str(item): item for item in nb.dcim.console_server_port_templates.filter(moduletype_id=module_type)}
+    all_consoleserverports = {str(
+        item): item for item in nb.dcim.console_server_port_templates.filter(moduletype_id=module_type)}
     need_consoleserverports = []
     for csport in consoleserverports:
         try:
@@ -388,8 +410,10 @@ def create_module_console_server_ports(consoleserverports, module_type, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def createFrontPorts(frontports, deviceType, nb):
-    all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(devicetype_id=deviceType)}
+    all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(
+        devicetype_id=deviceType)}
     need_frontports = []
     for frontport in frontports:
         try:
@@ -403,7 +427,8 @@ def createFrontPorts(frontports, deviceType, nb):
     if not need_frontports:
         return
 
-    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(devicetype_id=deviceType)}
+    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+        devicetype_id=deviceType)}
     for port in need_frontports:
         try:
             rpGet = all_rearports[port["rear_port"]]
@@ -422,8 +447,10 @@ def createFrontPorts(frontports, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_front_ports(frontports, module_type, nb):
-    all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(moduletype_id=module_type)}
+    all_frontports = {str(item): item for item in nb.dcim.front_port_templates.filter(
+        moduletype_id=module_type)}
     need_frontports = []
     for frontport in frontports:
         try:
@@ -437,7 +464,8 @@ def create_module_front_ports(frontports, module_type, nb):
     if not need_frontports:
         return
 
-    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(moduletype_id=module_type)}
+    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+        moduletype_id=module_type)}
     for port in need_frontports:
         try:
             rpGet = all_rearports[port["rear_port"]]
@@ -456,8 +484,10 @@ def create_module_front_ports(frontports, module_type, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def createRearPorts(rearports, deviceType, nb):
-    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(devicetype_id=deviceType)}
+    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+        devicetype_id=deviceType)}
     need_rearports = []
     for rearport in rearports:
         try:
@@ -481,8 +511,10 @@ def createRearPorts(rearports, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_rear_ports(rearports, module_type, nb):
-    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(moduletype_id=module_type)}
+    all_rearports = {str(item): item for item in nb.dcim.rear_port_templates.filter(
+        moduletype_id=module_type)}
     need_rearports = []
     for rearport in rearports:
         try:
@@ -506,8 +538,10 @@ def create_module_rear_ports(rearports, module_type, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def createDeviceBays(devicebays, deviceType, nb):
-    all_devicebays = {str(item): item for item in nb.dcim.device_bay_templates.filter(devicetype_id=deviceType)}
+    all_devicebays = {str(item): item for item in nb.dcim.device_bay_templates.filter(
+        devicetype_id=deviceType)}
     need_devicebays = []
     for devicebay in devicebays:
         try:
@@ -568,7 +602,8 @@ def create_module_bays(module_bays, device_type, nb):
 
 
 def createPowerOutlets(poweroutlets, deviceType, nb):
-    all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(devicetype_id=deviceType)}
+    all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(
+        devicetype_id=deviceType)}
     need_poweroutlets = []
     for poweroutlet in poweroutlets:
         try:
@@ -582,7 +617,8 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
     if not need_poweroutlets:
         return
 
-    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(devicetype_id=deviceType)}
+    all_power_ports = {str(item): item for item in nb.dcim.power_port_templates.filter(
+        devicetype_id=deviceType)}
     for outlet in need_poweroutlets:
         try:
             ppGet = all_power_ports[outlet["power_port"]]
@@ -601,6 +637,7 @@ def createPowerOutlets(poweroutlets, deviceType, nb):
     except pynetbox.RequestError as e:
         print(e.error)
 
+
 def create_module_power_outlets(poweroutlets, module_type, nb):
     '''Create missing module power outlets.
 
@@ -615,7 +652,8 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     Raises:
         None
     '''
-    all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(moduletype_id=module_type)}
+    all_poweroutlets = {str(item): item for item in nb.dcim.power_outlet_templates.filter(
+        moduletype_id=module_type)}
     need_poweroutlets = []
     for poweroutlet in poweroutlets:
         try:
@@ -629,8 +667,8 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
     if not need_poweroutlets:
         return
 
-    all_power_ports = {str(item): item for item in nb.dcim.\
-        power_port_templates.filter(moduletype_id=module_type)}
+    all_power_ports = {str(item): item for item in nb.dcim.
+                       power_port_templates.filter(moduletype_id=module_type)}
     for outlet in need_poweroutlets:
         try:
             ppGet = all_power_ports[outlet["power_port"]]
@@ -648,6 +686,7 @@ def create_module_power_outlets(poweroutlets, module_type, nb):
             counter.update({'module_port_added': 1})
     except pynetbox.RequestError as e:
         print(e.error)
+
 
 def createDeviceTypes(deviceTypes, nb):
     all_device_types = {str(item): item for item in nb.dcim.device_types.all()}
@@ -696,6 +735,7 @@ def createDeviceTypes(deviceTypes, nb):
             create_module_bays(deviceType['module-bays'],
                                dt.id, nb)
 
+
 def create_module_types(module_types, nb):
     '''Create missing module types.
 
@@ -714,12 +754,12 @@ def create_module_types(module_types, nb):
 
         all_module_types[curr_nb_mt.manufacturer.slug][curr_nb_mt.model] = curr_nb_mt
 
-
     for curr_mt in module_types:
         try:
-            module_type_res = all_module_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
+            module_type_res = all_module_types[curr_mt['manufacturer']
+                                               ['slug']][curr_mt["model"]]
             print(f'Module Type Exists: {module_type_res.manufacturer.name} - '
-                + f'{module_type_res.model} - {module_type_res.id}')
+                  + f'{module_type_res.model} - {module_type_res.id}')
         except KeyError:
             try:
                 module_type_res = nb.dcim.module_types.create(curr_mt)
@@ -728,9 +768,9 @@ def create_module_types(module_types, nb):
                       + f'{module_type_res.model} - {module_type_res.id}')
             except pynetbox.RequestError as exce:
                 print(f"Error '{exce.error}' creating module type: " +
-                    f"{curr_mt}")
+                      f"{curr_mt}")
 
-        #module_type_res = all_module_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
+        # module_type_res = all_module_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
 
         if "interfaces" in curr_mt:
             create_module_interfaces(curr_mt["interfaces"],
@@ -741,10 +781,10 @@ def create_module_types(module_types, nb):
         if "console-ports" in curr_mt:
             create_module_console_ports(curr_mt["console-ports"],
                                         module_type_res.id, nb)
-        if "power-outlets" in curr_mt: # No current entries to test
+        if "power-outlets" in curr_mt:  # No current entries to test
             create_module_power_outlets(curr_mt["power-outlets"],
                                         module_type_res.id, nb)
-        if "console-server-ports" in curr_mt: # No current entries to test
+        if "console-server-ports" in curr_mt:  # No current entries to test
             create_module_console_server_ports(curr_mt["console-server-ports"],
                                                module_type_res.id, nb)
         if "rear-ports" in curr_mt:
@@ -753,6 +793,7 @@ def create_module_types(module_types, nb):
         if "front-ports" in curr_mt:
             create_module_front_ports(curr_mt["front-ports"],
                                       module_type_res.id, nb)
+
 
 def main():
 
@@ -763,13 +804,15 @@ def main():
     nbUrl = settings.NETBOX_URL
     nbToken = settings.NETBOX_TOKEN
     nb = pynetbox.api(nbUrl, token=nbToken)
-    
+
     try:
         determine_features(nb)
     except requests.exceptions.SSLError as ssl_exception:
         if not settings.IGNORE_SSL_ERRORS:
-            settings.handle.exception("SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
-        print("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
+            settings.handle.exception(
+                "SSLError", settings.IGNORE_SSL_ERRORS, ssl_exception)
+        print(
+            "IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
         requests.packages.urllib3.disable_warnings()
         nb.http_session.verify = False
         determine_features(nb)
@@ -780,7 +823,6 @@ def main():
     else:
         print("Vendor Specified, Gathering All Matching Device-Types")
         files, vendors = getFiles(args.vendors)
-
 
     print(str(len(vendors)) + " Vendors Found")
     deviceTypes = readYAMl(files, slugs=args.slugs)
@@ -796,7 +838,6 @@ def main():
             print("Vendor Specified, Gathering All Matching Module-Types")
             files, vendors = get_files_modules(args.vendors)
 
-
         print(str(len(vendors)) + " Module Vendors Found")
         module_types = read_yaml_modules(files, slugs=args.slugs)
         print(str(len(module_types)) + " Module-Types Found")
@@ -810,7 +851,9 @@ def main():
     print('{} manufacturers created'.format(counter['manufacturer']))
     if settings.NETBOX_FEATURES['modules']:
         print(f"{counter['module_added']} modules created")
-        print(f"{counter['module_port_added']} module interface / ports created")
+        print(
+            f"{counter['module_port_added']} module interface / ports created")
+
 
 if __name__ == "__main__":
     main()
