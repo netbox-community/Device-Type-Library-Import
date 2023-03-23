@@ -13,7 +13,7 @@ This script will clone a copy of the `netbox-community/devicetype-library` repos
 1. This script is written in Python, so lets setup a virtual environment.
 
 ```
-git clone https://github.com/minitriga/Netbox-Device-Type-Library-Import 
+git clone https://github.com/minitriga/Netbox-Device-Type-Library-Import
 cd Netbox-Device-Type-Library-Import
 python3 -m venv venv
 source venv/bin/activate
@@ -38,10 +38,16 @@ Finally, we are able to execute the script and import some device templates!
 
 ## 🔌 Usage
 
-To use the script, simply execute the script as follows. Make sure you're still in the activated virtual environment we created before.
+To use the script, simply execute the script as follows. Make sure you're still in the activated virtual environment we created before. (Mac/Linux users)
 
 ```
 ./nb-dt-import.py
+```
+
+For windows users, execute this slightly modifiied file in the same activated environment as before.
+
+```
+./nb-dt-import_windows.py
 ```
 
 This will clone the latest master branch from the `netbox-community/devicetype-library` from Github and install it into the `repo` subdirectory. If this directory already exists, it will perform a `git pull` to update the reposity instead.
@@ -58,7 +64,7 @@ To import only device by APC, for example:
 ./nb-dt-import.py --vendors apc
 ```
 
-`--vendors` can also accept a comma separated list of vendors if you want to import multiple. 
+`--vendors` can also accept a comma separated list of vendors if you want to import multiple.
 
 ```
 ./nb-dt-import.py --vendors apc,juniper
@@ -66,9 +72,9 @@ To import only device by APC, for example:
 
 ## Docker build
 
-It's possible to use this project as a docker container. 
+It's possible to use this project as a docker container.
 
-To build : 
+To build :
 
 ```
 docker build -t netbox-devicetype-import-library .
@@ -80,7 +86,7 @@ Alternatively you can pull a pre-built image from Github Container Registry (ghc
 docker pull ghcr.io/minitriga/netbox-device-type-library-import
 ```
 
-The container supports the following env var as configuration : 
+The container supports the following env var as configuration :
 
 - `REPO_URL`, the repo to look for device types (defaults to _https://github.com/netbox-community/devicetype-library.git_)
 - `REPO_BRANCH`, the branch to check out if appropriate, defaults to master.
@@ -88,7 +94,7 @@ The container supports the following env var as configuration :
 - `NETBOX_TOKEN`, token for accessing netbox
 - `VENDORS`, a comma-separated list of vendors to import (defaults to None)
 
-To run : 
+To run :
 
 ```
 docker run -e "NETBOX_URL=http://netbox:8080/" -e "NETBOX_TOKEN=98765434567890" ghcr.io/minitriga/netbox-device-type-library-import
