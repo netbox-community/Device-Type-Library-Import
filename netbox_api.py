@@ -1,6 +1,8 @@
 from collections import Counter
 import pynetbox
 import requests
+import os
+import glob
 # from pynetbox import RequestError as APIRequestError
 
 class NetBox:
@@ -80,16 +82,23 @@ class NetBox:
     def create_device_types(self, device_types_to_add):
         for device_type in device_types_to_add:
 
-            # Treat front/rear_image differently
-            saved_images = {}
-            for i in ["front_image","rear_image"]:
-                if i in device_type:
-                  saved_images[i] = device_type[i]
-                  del device_type[i]
-
             # Remove file base path
             src_file = device_type["src"]
             del device_type["src"]
+
+            # Pre-process front/rear_image flag, remove it if present
+            saved_images = {}
+            image_base = os.path.dirname(src_file).replace("device-types","elevation-images")
+            for i in ["front_image","rear_image"]:
+                if i in device_type:
+                    if device_type[i]:
+                        image_glob = f"{image_base}/{device_type['slug']}.{i.split('_')[0]}.*"
+                        images = glob.glob(image_glob, recursive=False)
+                        if images:
+                          saved_images[i] = images[0]
+                        else:
+                          self.handle.log(f"Error locating image file using '{image_glob}'")
+                    del device_type[i]
 
             try:
                 dt = self.device_types.existing_device_types[device_type["model"]]
@@ -129,7 +138,7 @@ class NetBox:
 
             # Finally, update images if any
             if saved_images:
-                self.device_types.upload_images(saved_images, src_file, dt.id)
+                self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
 
     def create_module_types(self, module_types):
         all_module_types = {}
@@ -453,23 +462,22 @@ class DeviceTypes:
             except pynetbox.RequestError as excep:
                 self.handle.log(f"Error '{excep.error}' creating Module Front Port")
 
-    def upload_images(self,images,src_file,device_type):
+    def upload_images(self,baseurl,token,images,device_type):
         '''Upload front_image and/or rear_image for the given device type
 
         Args:
-        deviceTypeId: id for the device-type to update
-        images: map of front_image and/or rear_image
-        src_file: YANG source file path, used to resolve relative paths
+        baseurl: URL for Netbox instance
+        token: Token to access Netbox instance
+        images: map of front_image and/or rear_image filename
+        device_type: id for the device-type to update
 
         Returns:
         None
         '''
-        url = self.url + f"api/dcim/device-types/{device_type}/"
-        headers = { "Authorization": f"Token {self.token}" }
-        base_dir = os.path.dirname(src_file)
+        url = f"{baseurl}/api/dcim/device-types/{device_type}/"
+        headers = { "Authorization": f"Token {token}" }
 
-        files = { i: (os.path.basename(f), open(os.path.join(base_dir,f),"rb") )
-                  for i,f in images.items() }
+        files = { i: (os.path.basename(f), open(f,"rb") ) for i,f in images.items() }
         response = requests.patch(url, headers=headers, files=files)
 
         self.handle.log( f'Images {images} updated at {url}: {response}' )
