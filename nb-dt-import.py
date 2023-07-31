@@ -38,6 +38,7 @@ def main():
     settings.handle.verbose_log(
         f'Script took {(datetime.now() - startTime)} to run')
     settings.handle.log(f'{netbox.counter["added"]} devices created')
+    settings.handle.log(f'{netbox.counter["images"]} images uploaded')
     settings.handle.log(
         f'{netbox.counter["updated"]} interfaces/ports updated')
     settings.handle.log(
