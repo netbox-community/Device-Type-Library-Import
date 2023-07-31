@@ -478,7 +478,7 @@ class DeviceTypes:
         headers = { "Authorization": f"Token {token}" }
 
         files = { i: (os.path.basename(f), open(f,"rb") ) for i,f in images.items() }
-        response = requests.patch(url, headers=headers, files=files)
+        response = requests.patch(url, headers=headers, files=files, verify=False)
 
         self.handle.log( f'Images {images} updated at {url}: {response}' )
         self.counter["images"] += len(images)
