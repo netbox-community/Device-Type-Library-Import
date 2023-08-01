@@ -27,14 +27,14 @@ class NetBox:
         self.connect_api()
         self.verify_compatibility()
         self.existing_manufacturers = self.get_manufacturers()
-        self.device_types = DeviceTypes(self.netbox, self.handle, self.counter)
+        self.device_types = DeviceTypes(self.netbox, self.handle, self.counter, self.ignore_ssl)
 
     def connect_api(self):
         try:
             self.netbox = pynetbox.api(self.url, token=self.token)
             if self.ignore_ssl:
                 self.handle.verbose_log("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
-                requests.packages.urllib3.disable_warnings()
+                #requests.packages.urllib3.disable_warnings()
                 self.netbox.http_session.verify = False
         except Exception as e:
             self.handle.exception("Exception", 'NetBox API Error', e)
@@ -183,11 +183,12 @@ class DeviceTypes:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
 
-    def __init__(self, netbox, handle, counter):
+    def __init__(self, netbox, handle, counter, ignore_ssl):
         self.netbox = netbox
         self.handle = handle
         self.counter = counter
         self.existing_device_types = self.get_device_types()
+        self.ignore_ssl = ignore_ssl
 
     def get_device_types(self):
         return {str(item): item for item in self.netbox.dcim.device_types.all()}
@@ -478,7 +479,7 @@ class DeviceTypes:
         headers = { "Authorization": f"Token {token}" }
 
         files = { i: (os.path.basename(f), open(f,"rb") ) for i,f in images.items() }
-        response = requests.patch(url, headers=headers, files=files, verify=False)
+        response = requests.patch(url, headers=headers, files=files, verify=(not self.ignore_ssl))
 
         self.handle.log( f'Images {images} updated at {url}: {response}' )
         self.counter["images"] += len(images)
