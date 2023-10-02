@@ -98,7 +98,10 @@ class DTLRepo:
                 # Save file location to resolve any relative paths for images
                 data['src'] = file
 
-            if slugs and True not in [True if s.casefold() in data['slug'].casefold() else False for s in slugs]:
+            match_any_given_slug_wildcard = any(
+                [s.lower() in data["slug"].lower() for s in slugs if "slug" in data]
+            )
+            if not match_any_given_slug_wildcard:
                 self.handle.verbose_log(f"Skipping {data['model']}")
                 continue
 
