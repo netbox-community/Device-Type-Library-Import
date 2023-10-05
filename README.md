@@ -14,7 +14,7 @@ This script will clone a copy of the `netbox-community/devicetype-library` repos
 
 ```
 git clone https://github.com/netbox-community/Device-Type-Library-Import.git
-cd Netbox-Device-Type-Library-Import
+cd Device-Type-Library-Import
 python3 -m venv venv
 source venv/bin/activate
 ```
