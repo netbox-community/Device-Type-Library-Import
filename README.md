@@ -14,7 +14,7 @@ This script will clone a copy of the `netbox-community/devicetype-library` repos
 
 ```
 git clone https://github.com/netbox-community/Device-Type-Library-Import.git
-cd Netbox-Device-Type-Library-Import
+cd Device-Type-Library-Import
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -44,13 +44,13 @@ To use the script, simply execute the script as follows. Make sure you're still 
 ./nb-dt-import.py
 ```
 
-This will clone the latest master branch from the `netbox-community/devicetype-library` from Github and install it into the `repo` subdirectory. If this directory already exists, it will perform a `git pull` to update the reposity instead.
+This will clone the latest master branch from the `netbox-community/devicetype-library` from Github and install it into the `repo` subdirectory. If this directory already exists, it will perform a `git pull` to update the repository instead.
 
 Next, it will loop over every manufacturer and every device of every manufacturer and begin checking if your Netbox install already has them, and if not, creates them. It will skip preexisting manufacturers, devices, interfaces, etc. so as to not end up with duplicate entries in your Netbox instance.
 
 ### 🧰 Arguments
 
-This script currently accepts a list of vendors as an arugment, so that you can selectively import devices.
+This script currently accepts a list of vendors as an argument, so that you can selectively import devices.
 
 To import only device by APC, for example:
 
