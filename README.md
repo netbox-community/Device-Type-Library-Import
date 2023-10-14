@@ -12,7 +12,7 @@ This script will clone a copy of the `netbox-community/devicetype-library` repos
 
 1. This script is written in Python, so lets setup a virtual environment.
 
-```
+```bash
 git clone https://github.com/netbox-community/Device-Type-Library-Import.git
 cd Device-Type-Library-Import
 python3 -m venv venv
@@ -21,7 +21,7 @@ source venv/bin/activate
 
 2. Now that we have the basics setup, we'll need to install the requirements.
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 Copy the existing `.env.example` to your own `.env` file, and fill in the variables.
 
-```
+```bash
 cp .env.example .env
 vim .env
 ```
@@ -40,7 +40,7 @@ Finally, we are able to execute the script and import some device templates!
 
 To use the script, simply execute the script as follows. Make sure you're still in the activated virtual environment we created before.
 
-```
+```bash
 ./nb-dt-import.py
 ```
 
@@ -54,13 +54,13 @@ This script currently accepts a list of vendors as an argument, so that you can 
 
 To import only device by APC, for example:
 
-```
+```bash
 ./nb-dt-import.py --vendors apc
 ```
 
 `--vendors` can also accept a comma separated list of vendors if you want to import multiple.
 
-```
+```bash
 ./nb-dt-import.py --vendors apc,juniper
 ```
 
@@ -70,13 +70,13 @@ It's possible to use this project as a docker container.
 
 To build :
 
-```
+```bash
 docker build -t netbox-devicetype-import-library .
 ```
 
 Alternatively you can pull a pre-built image from Github Container Registry (ghcr.io):
 
-```
+```bash
 docker pull ghcr.io/minitriga/netbox-device-type-library-import
 ```
 
@@ -90,8 +90,23 @@ The container supports the following env var as configuration :
 
 To run :
 
-```
+```bash
 docker run -e "NETBOX_URL=http://netbox:8080/" -e "NETBOX_TOKEN=98765434567890" ghcr.io/minitriga/netbox-device-type-library-import
+```
+
+Like for python script execution, an env file can be created and used with docker command:
+
+```bash
+cp .env.example env-docker
+vim env-docker
+
+docker run --rm --env-file=env-docker ghcr.io/minitriga/netbox-device-type-library-import
+```
+
+To make it similar to python script, you can use the `--vendors` knob in the cli
+
+```bash
+docker run --rm --env-file=env-docker ghcr.io/minitriga/netbox-device-type-library-import --vendors Arista,Juniper
 ```
 
 ## 🧑‍💻 Contributing
