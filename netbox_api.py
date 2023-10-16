@@ -14,6 +14,7 @@ class NetBox:
             added=0,
             updated=0,
             manufacturer=0,
+            device_role=0,
             module_added=0,
             module_port_added=0,
             images=0,
@@ -78,6 +79,31 @@ class NetBox:
             except pynetbox.RequestError as request_error:
                 self.handle.log("Error creating manufacturers")
                 self.handle.verbose_log(f"Error during manufacturer creation. - {request_error.error}")
+
+    def get_device_roles(self):
+        return {str(item): item for item in self.netbox.dcim.device_roles.all()}
+
+    def create_device_roles(self, roles):
+        to_create = []
+        self.existing_device_roles = self.get_device_roles()
+        for role in roles:
+            try:
+                rolGet = self.existing_device_roles[role["name"]]
+                self.handle.verbose_log(f'Device Roles Exists: {rolGet.name} - {rolGet.id}')
+            except KeyError:
+                to_create.append(role)
+                self.handle.verbose_log(f"Device Role queued for addition: {role['name']}")
+
+        if to_create:
+            try:
+                created_device_roles = self.netbox.dcim.device_roles.create(to_create)
+                for role in created_device_roles:
+                    self.handle.verbose_log(f'Device Role Created: {role.name} - '
+                        + f'{role.id}')
+                    self.counter.update({'device_role': 1})
+            except pynetbox.RequestError as request_error:
+                self.handle.log("Error creating device role")
+                self.handle.verbose_log(f"Error during device role creation. - {request_error.error}")
 
     def create_device_types(self, device_types_to_add):
         for device_type in device_types_to_add:
