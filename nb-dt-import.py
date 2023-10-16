@@ -21,7 +21,12 @@ def main():
     settings.handle.log(f'{len(vendors)} Vendors Found')
     device_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
     settings.handle.log(f'{len(device_types)} Device-Types Found')
+    files = settings.dtl_repo.get_device_roles(
+        f'{settings.dtl_repo.repo_path}/device-roles/')
+    device_roles = settings.dtl_repo.parse_device_roles_files(files)
+    settings.handle.log(f'{len(device_roles)} Device Roles Found')
     netbox.create_manufacturers(vendors)
+    netbox.create_device_roles(device_roles)
     netbox.create_device_types(device_types)
 
     if netbox.modules:
@@ -43,6 +48,8 @@ def main():
         f'{netbox.counter["updated"]} interfaces/ports updated')
     settings.handle.log(
         f'{netbox.counter["manufacturer"]} manufacturers created')
+    settings.handle.log(
+        f'{netbox.counter["device_role"]} device roles created')
     if settings.NETBOX_FEATURES['modules']:
         settings.handle.log(
             f'{netbox.counter["module_added"]} modules created')

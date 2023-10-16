@@ -82,6 +82,24 @@ class DTLRepo:
                     files.extend(glob(base_path + folder + f'/*.{extension}'))
         return files, discovered_vendors
 
+    def get_device_roles(self, base_path):
+        files = []
+        for extension in self.yaml_extensions:
+            files.extend(glob(base_path + f'/*.{extension}'))
+        return files
+
+    def parse_device_roles_files(self, files):
+        deviceRoles = []
+        for file in files:
+            with open(file, 'r') as stream:
+                try:
+                    data = yaml.safe_load(stream)
+                except yaml.YAMLError as excep:
+                    self.handle.verbose_log(excep)
+                    continue
+                deviceRoles += data
+        return deviceRoles
+
     def parse_files(self, files: list, slugs: list = None):
         deviceTypes = []
         for file in files:
