@@ -34,7 +34,7 @@ class NetBox:
             self.netbox = pynetbox.api(self.url, token=self.token)
             if self.ignore_ssl:
                 self.handle.verbose_log("IGNORE_SSL_ERRORS is True, catching exception and disabling SSL verification.")
-                #requests.packages.urllib3.disable_warnings()
+                requests.packages.urllib3.disable_warnings()
                 self.netbox.http_session.verify = False
         except Exception as e:
             self.handle.exception("Exception", 'NetBox API Error', e)
