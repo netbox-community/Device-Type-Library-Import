@@ -85,15 +85,15 @@ class NetBox:
                 self.handle.log("Error creating manufacturers")
                 self.handle.verbose_log(f"Error during manufacturer creation. - {request_error.error}")
 
-    def create_device_types(self, device_types_to_add):
+    def create_device_types(self, device_types_to_add, replace_existing_images=True):
         for device_type in device_types_to_add:
 
             # Remove file base path
             src_file = device_type["src"]
             del device_type["src"]
 
-            # Pre-process front/rear_image flag, remove it if present
-            saved_images = {}
+            # Pre-process front/rear_image flag, remove flag if present
+            device_images_from_library = {}
             image_base = os.path.dirname(src_file).replace("device-types","elevation-images")
             for i in ["front_image","rear_image"]:
                 if i in device_type:
@@ -101,9 +101,9 @@ class NetBox:
                         image_glob = f"{image_base}/{device_type['slug']}.{i.split('_')[0]}.*"
                         images = glob.glob(image_glob, recursive=False)
                         if images:
-                          saved_images[i] = images[0]
+                            device_images_from_library[i] = images[0]
                         else:
-                          self.handle.log(f"Error locating image file using '{image_glob}'")
+                            self.handle.log(f"Error locating image file using '{image_glob}'")
                     del device_type[i]
 
             try:
@@ -143,8 +143,8 @@ class NetBox:
                 self.device_types.create_module_bays(device_type['module-bays'], dt.id)
 
             # Finally, update images if any
-            if saved_images:
-                self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
+            if device_images_from_library:
+                self.device_types.upload_images(self.url, self.token, device_images_from_library, dt.id, replace_existing_images=replace_existing_images)
 
     def create_module_types(self, module_types):
         all_module_types = {}
@@ -470,19 +470,45 @@ class DeviceTypes:
             except pynetbox.RequestError as excep:
                 self.handle.log(f"Error '{excep.error}' creating Module Front Port")
 
-    def upload_images(self,baseurl,token,images,device_type):
-        '''Upload front_image and/or rear_image for the given device type
+
+
+    def upload_images(self, baseurl, token, images, device_type_id, replace_existing_images=False):
+        '''Upload front_image and/or rear_image for the given device type if they do not already exist, unless replace_existing_images is True.
 
         Args:
         baseurl: URL for Netbox instance
         token: Token to access Netbox instance
         images: map of front_image and/or rear_image filename
-        device_type: id for the device-type to update
+        device_type_id: id for the device-type to update
+        replace_existing_images: boolean flag, if True, forces upload even if images already exist
 
         Returns:
         None
         '''
-        url = f"{baseurl}/api/dcim/device-types/{device_type}/"
+        # Fetch the current device type details using PyNetBox
+        device_type = self.netbox.dcim.device_types.get(device_type_id)
+
+        if not device_type:
+            self.handle.log(f"Device type with ID {device_type_id} not found in NetBox.")
+            return
+
+        # Check if images already exist
+        existing_images = {
+            "front_image": getattr(device_type, "front_image", None),
+            "rear_image": getattr(device_type, "rear_image", None)
+        }
+
+        # Filter out images that already exist unless replace_existing_images is True
+        images_to_upload = {
+            key: value for key, value in images.items()
+            if replace_existing_images or not existing_images.get(key)
+        }
+
+        if not images_to_upload:
+            self.handle.log(f"No new images to upload for device type {device_type}. Skipping.")
+            return
+
+        url = f"{baseurl}/api/dcim/device-types/{device_type_id}/"
         headers = { "Authorization": f"Token {token}" }
 
         files = { i: (os.path.basename(f), open(f,"rb") ) for i,f in images.items() }
@@ -490,3 +516,4 @@ class DeviceTypes:
 
         self.handle.log( f'Images {images} updated at {url}: {response}' )
         self.counter["images"] += len(images)
+

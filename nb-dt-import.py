@@ -22,7 +22,7 @@ def main():
     device_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
     settings.handle.log(f'{len(device_types)} Device-Types Found')
     netbox.create_manufacturers(vendors)
-    netbox.create_device_types(device_types)
+    netbox.create_device_types(device_types, replace_existing_images=args.replace_existing_images)
 
     if netbox.modules:
         settings.handle.log("Modules Enabled. Creating Modules...")
