@@ -43,9 +43,6 @@ class DTLRepo:
             self.handle.log("Package devicetype-library is already installed, "
                             + f"updating {self.get_absolute_path()}")
             self.repo = Repo(self.repo_path)
-            if not self.repo.remotes.origin.url.endswith('.git'):
-                self.handle.exception("GitInvalidRepositoryError", self.repo.remotes.origin.url,
-                                      f"Origin URL {self.repo.remotes.origin.url} does not end with .git")
             self.repo.remotes.origin.pull()
             self.repo.git.checkout(self.branch)
             self.handle.verbose_log(
