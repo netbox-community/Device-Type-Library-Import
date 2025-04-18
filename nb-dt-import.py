@@ -43,7 +43,7 @@ def main():
         f'{netbox.counter["updated"]} interfaces/ports updated')
     settings.handle.log(
         f'{netbox.counter["manufacturer"]} manufacturers created')
-    if settings.NETBOX_FEATURES['modules']:
+    if netbox.modules:
         settings.handle.log(
             f'{netbox.counter["module_added"]} modules created')
         settings.handle.log(
