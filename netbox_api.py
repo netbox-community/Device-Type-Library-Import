@@ -16,6 +16,7 @@ class NetBox:
             manufacturer=0,
             module_added=0,
             module_port_added=0,
+            rack_types_added=0,
             images=0,
         )
         self.url = settings.NETBOX_URL
@@ -24,6 +25,7 @@ class NetBox:
         self.netbox = None
         self.ignore_ssl = settings.IGNORE_SSL_ERRORS
         self.modules = False
+        self.rack_types = False
         self.new_filters = False
         self.connect_api()
         self.verify_compatibility()
@@ -54,6 +56,7 @@ class NetBox:
         # Might want to check for the module-types entry as well?
         if version_split[0] > 3 or (version_split[0] == 3 and version_split[1] >= 2):
             self.modules = True
+            self.rack_types = True
 
         # check if version >= 4.1 in order to use new filter names (https://github.com/netbox-community/netbox/issues/15410)
         if version_split[0] >= 4 and version_split[1] >= 1:
@@ -145,6 +148,31 @@ class NetBox:
             # Finally, update images if any
             if saved_images:
                 self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
+
+    def create_rack_types(self, rack_types):
+        all_rack_types = {}
+        for curr_nb_mt in self.netbox.dcim.rack_types.all():
+            if curr_nb_mt.manufacturer.slug not in all_rack_types:
+                all_rack_types[curr_nb_mt.manufacturer.slug] = {}
+
+            all_rack_types[curr_nb_mt.manufacturer.slug][curr_nb_mt.model] = curr_nb_mt
+
+
+        for curr_mt in rack_types:
+            try:
+                rack_type_res = all_rack_types[curr_mt['manufacturer']['slug']][curr_mt["model"]]
+                self.handle.verbose_log(f'Rack Type Exists: {rack_type_res.manufacturer.name} - '
+                    + f'{rack_type_res.model} - {rack_type_res.id}')
+            except KeyError:
+                try:
+                    rack_type_res = self.netbox.dcim.rack_types.create(curr_mt)
+                    self.counter.update({'rack_types_added': 1})
+                    self.handle.verbose_log(f'Rack Type Created: {rack_type_res.manufacturer.name} - '
+                        + f'{rack_type_res.model} - {rack_type_res.id}')
+                except pynetbox.RequestError as exce:
+                    self.handle.log(f"Error '{exce.error}' creating rack type: " +
+                        f"{curr_mt}")
+
 
     def create_module_types(self, module_types):
         all_module_types = {}
