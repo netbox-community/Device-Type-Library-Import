@@ -131,5 +131,6 @@ dmypy.json
 
 # Editor
 .vscode
+.idea
 
 repo
