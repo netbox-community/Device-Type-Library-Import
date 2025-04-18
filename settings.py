@@ -19,10 +19,6 @@ VENDORS = list(filter(None, os.getenv("VENDORS", "").split(",")))
 # optionally load device types through a space separated list as env var
 SLUGS = os.getenv("SLUGS", "").split()
 
-NETBOX_FEATURES = {
-    'modules': False,
-}
-
 parser = ArgumentParser(description='Import Netbox Device Types')
 parser.add_argument('--vendors', nargs='+', default=VENDORS,
                     help="List of vendors to import eg. apc cisco")

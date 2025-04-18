@@ -34,6 +34,16 @@ def main():
         netbox.create_manufacturers(vendors)
         netbox.create_module_types(module_types)
 
+    if netbox.rack_types:
+        settings.handle.log("Rack-Types Enabled. Creating Racks...")
+        files, vendors = settings.dtl_repo.get_devices(
+            f'{settings.dtl_repo.repo_path}/rack-types/', args.vendors)
+        settings.handle.log(f'{len(vendors)} Rack Vendors Found')
+        rack_types = settings.dtl_repo.parse_files(files, slugs=args.slugs)
+        settings.handle.log(f'{len(rack_types)} Rack-Types Found')
+        netbox.create_manufacturers(vendors)
+        netbox.create_rack_types(rack_types)
+
     settings.handle.log('---')
     settings.handle.verbose_log(
         f'Script took {(datetime.now() - startTime)} to run')
@@ -43,11 +53,14 @@ def main():
         f'{netbox.counter["updated"]} interfaces/ports updated')
     settings.handle.log(
         f'{netbox.counter["manufacturer"]} manufacturers created')
-    if settings.NETBOX_FEATURES['modules']:
+    if netbox.modules:
         settings.handle.log(
             f'{netbox.counter["module_added"]} modules created')
         settings.handle.log(
             f'{netbox.counter["module_port_added"]} module interface / ports created')
+    if netbox.rack_types:
+        settings.handle.log(
+            f'{netbox.counter["rack_types_added"]} rack-types created')
 
 
 if __name__ == "__main__":
