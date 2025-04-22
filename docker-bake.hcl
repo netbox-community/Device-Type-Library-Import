@@ -10,6 +10,6 @@ target "default" {
 
 target "dev" {
     tags = [
-        "netbox-community/device-type-library-import:dev"
+        "ghcr.io/netbox-community/device-type-library-import:dev"
     ]
 }
