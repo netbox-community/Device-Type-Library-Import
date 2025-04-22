@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.13-alpine
 
 ENV REPO_URL=https://github.com/netbox-community/devicetype-library.git
 WORKDIR /app
