@@ -98,9 +98,11 @@ class DTLRepo:
                 # Save file location to resolve any relative paths for images
                 data['src'] = file
 
-            if slugs and True not in [True if s.casefold() in data['slug'].casefold() else False for s in slugs]:
-                self.handle.verbose_log(f"Skipping {data['model']}")
-                continue
+            if slugs:
+                slug_present = any(s.casefold() in data.get('slug', '').casefold() for s in slugs)
+                if not slug_present:
+                    self.handle.verbose_log(f"Skipping {data['model']}")
+                    continue
 
             deviceTypes.append(data)
         return deviceTypes
