@@ -29,8 +29,8 @@ def main():
     settings.handle.log("Creating Device Types")
     netbox.create_device_types(device_types)
 
-    settings.handle.log("-=-=-=-=- Checking Modules -=-=-=-=-")
     if netbox.modules:
+        settings.handle.log("-=-=-=-=- Checking Modules -=-=-=-=-")
         settings.handle.log("Modules Enabled. Creating Modules...")
         files, vendors = settings.dtl_repo.get_devices(
             f'{settings.dtl_repo.repo_path}/module-types/', args.vendors)
