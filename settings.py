@@ -5,12 +5,12 @@ from repo import DTLRepo
 from dotenv import load_dotenv
 load_dotenv()
 
-REPO_URL = os.getenv("REPO_URL",
-                     default="https://github.com/netbox-community/devicetype-library.git")
+REPO_URL = os.getenv("REPO_URL", default="https://github.com/netbox-community/devicetype-library.git")
 REPO_BRANCH = os.getenv("REPO_BRANCH", default="master")
 NETBOX_URL = os.getenv("NETBOX_URL")
 NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
 IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", default="False") == "True")
+SKIP_EXISTING_DEVICE_TYPES = (os.getenv("SKIP_EXISTING_DEVICE_TYPES", default="False") == "True")
 REPO_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/repo"
 RETRY_DELAY = os.getenv("RETRY_DELAY", default=5) # Configurable for more conjested networks. 5 generally works.
 
@@ -31,16 +31,11 @@ NETBOX_FEATURES = {
 }
 
 parser = ArgumentParser(description='Import Netbox Device Types')
-parser.add_argument('--vendors', nargs='+', default=VENDORS,
-                    help="List of vendors to import eg. apc cisco")
-parser.add_argument('--url', '--git', default=REPO_URL,
-                    help="Git URL with valid Device Type YAML files")
-parser.add_argument('--slugs', nargs='+', default=SLUGS,
-                    help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
-parser.add_argument('--branch', default=REPO_BRANCH,
-                    help="Git branch to use from repo")
-parser.add_argument('--verbose', action='store_true', default=False,
-                    help="Print verbose output")
+parser.add_argument('--vendors', nargs='+', default=VENDORS, help="List of vendors to import eg. apc cisco")
+parser.add_argument('--url', '--git', default=REPO_URL, help="Git URL with valid Device Type YAML files")
+parser.add_argument('--slugs', nargs='+', default=SLUGS, help="List of device-type slugs to import eg. ap4431 ws-c3850-24t-l")
+parser.add_argument('--branch', default=REPO_BRANCH, help="Git branch to use from repo")
+parser.add_argument('--verbose', action='store_true', default=False, help="Print verbose output")
 
 args = parser.parse_args()
 
