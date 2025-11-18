@@ -28,6 +28,7 @@ class NetBox:
         self.handle = settings.handle
         self.netbox = None
         self.ignore_ssl = settings.IGNORE_SSL_ERRORS
+        self.skip_existing_device_types = settings.SKIP_EXISTING_DEVICE_TYPES
         self.retry_delay = int(settings.RETRY_DELAY)
         self.modules = False
         self.new_filters = False
@@ -82,14 +83,24 @@ class NetBox:
 
         if to_create:
             try:
+                self.handle.verbose_log(f'Attempting bulk manufacturer creation...')
                 created_manufacturers = self.netbox.dcim.manufacturers.create(to_create)
+                # If the bulk creation fails, this portion isn't reached and we instead catch the except clause
                 for manufacturer in created_manufacturers:
-                    self.handle.verbose_log(f'Manufacturer Created: {manufacturer.name} - '
-                        + f'{manufacturer.id}')
+                    self.handle.verbose_log(f'Manufacturer Created: {manufacturer.name} - {manufacturer.id}')
                     self.counter.update({'manufacturer': 1})
-            except pynetbox.RequestError as request_error:
-                self.handle.log("Error creating manufacturers")
-                self.handle.verbose_log(f"Error during manufacturer creation. - {request_error.error}")
+            except pynetbox.RequestError:
+                self.handle.log("Error creating manufacturers in bulk. Attempting one at a time...")
+
+                # If bulk creation fails, try each individually to determine the problematic ones
+                for entry in to_create:
+                    try:
+                        created_manufacturer = self.netbox.dcim.manufacturers.create(entry)
+                        self.handle.verbose_log(f'Manufacturer Created: {created_manufacturer.name} - {created_manufacturer.id}')
+                        self.counter.update({'manufacturer': 1})
+                    except  pynetbox.RequestError as request_error:
+                        self.handle.log(f"Error creating manufacturer with slug '{entry["slug"]}'. Perhaps a name mismatch already exists in your environment? - {request_error.error}")
+                
 
     def create_device_types(self, device_types_to_add):
         retry_amount = 2
@@ -102,6 +113,9 @@ class NetBox:
 
             while retries < retry_amount:
                 device_type = copy.deepcopy(device_type_immutable) # Can this be a copy.copy(device_type_immutable)?
+
+                # Not sure what causes this edge case. Sometimes the src just isn't populated by repo.py?
+                if not device_type.__contains__("src"): continue
 
                 try:
                     if retries == 0:
@@ -129,14 +143,19 @@ class NetBox:
 
                     try:
                         dt = self.device_types.existing_device_types[device_type['model']]
-                        self.handle.verbose_log(f'Device Type Exists: {dt.manufacturer.name} - {dt.model} - {dt.id}')
+                        if self.skip_existing_device_types:
+                            self.handle.verbose_log(f'Device Type Exists. Skipping update! [{dt.id}] {dt.manufacturer.name} {dt.model}')
+                            break # Breaks the "while" retry loop, continuing to the next "for" item
+                        else:
+                            self.handle.verbose_log(f'Device Type Exists [{dt.id}] {dt.manufacturer.name} {dt.model}')
                     except KeyError:
                         try:
                             dt = self.netbox.dcim.device_types.create(device_type)
                             self.counter.update({'added': 1})
-                            self.handle.verbose_log(f'Device Type Created: {dt.manufacturer.name} - {dt.model} - {dt.id}')
+                            self.handle.verbose_log(f'Device Type Created: [{dt.id}] {dt.manufacturer.name} {dt.model}')
                         except pynetbox.RequestError as e:
-                            self.handle.log(f'Error {e.error} creating device type: {device_type['manufacturer']['name']} {device_type['model']}')
+                            # Can we suppress this error message if it includes "already exists"?
+                            self.handle.log(f'Error creating device type {device_type["manufacturer"]["name"]} {device_type["model"]}: {e.error}')
                             retries += 1
                             continue
 
@@ -160,13 +179,11 @@ class NetBox:
                         self.device_types.create_device_bays(device_type['device-bays'], dt.id)
                     if self.modules and 'module-bays' in device_type:
                         self.device_types.create_module_bays(device_type['module-bays'], dt.id)
-
-                    # Finally, update images if any
+                  
                     if saved_images:
                         self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
                     
-                    # We successfully processed the device. Don't retry it.
-                    retries = retry_amount
+                    break # We successfully processed the device. Don't retry it.
                 except (http.client.RemoteDisconnected, requests.exceptions.ConnectionError) as e:
                     retries += 1
                     self.counter.update({'connection_errors': 1})
@@ -344,7 +361,8 @@ class DeviceTypes:
                                          self.netbox.dcim.power_outlet_templates.create(to_create), "Power Outlet")
                                      })
             except pynetbox.RequestError as excep:
-                self.handle.log(f"Error '{excep.error}' creating Power Outlet")
+                self.handle.log(f'Error creating Power Outlet for device_type {device_type}. This typically indicates the YAML has a misconfigured [power-outlets/power_port] reference.')
+                self.handle.log(f'{excep.error}')
 
     def create_console_server_ports(self, console_server_ports, device_type):
         existing_console_server_ports = {str(item): item for item in self.netbox.dcim.console_server_port_templates.filter(**{'device_type_id' if self.new_filters else 'devicetype_id': device_type})}
@@ -542,13 +560,16 @@ class DeviceTypes:
         '''
         url = f"{baseurl}/api/dcim/device-types/{device_type}/"
         headers = { "Authorization": f"Token {token}" }
-
         files = { i: (os.path.basename(f), open(f,"rb") ) for i,f in images.items() }
         response = requests.patch(url, headers=headers, files=files, verify=(not self.ignore_ssl))
         
+        self.handle.verbose_log(f"Updating {len(images)} image(s) for device_type {device_type}...")
         if response.status_code == 500:
             raise Exception(f"Remote server failed to write images. Ensure your media directory exists and is writable! - {response}")
+        elif response.status_code == 200:
+            pass # No need to output on success.
+            #self.handle.verbose_log( f'Updated image(s) for {device_type} from file {images}' )
         else:
-            self.handle.log( f'Images {images} updated at {url}: {response} (Code {response.status_code})' )
+            self.handle.log( f'Failed to update image(s). Received code ({response.status_code}) for {device_type} from file {images}!' )
         
         self.counter['images'] += len(images)
