@@ -12,7 +12,7 @@ NETBOX_URL = os.getenv("NETBOX_URL")
 NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
 IGNORE_SSL_ERRORS = (os.getenv("IGNORE_SSL_ERRORS", default="False") == "True")
 REPO_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/repo"
-RETRY_DELAY = os.getenv("RETRY_DELAY", default=5) # Configurable for more conjested networks. 5 generally works.
+RETRY_DELAY = os.getenv("RETRY_DELAY", default="5") # Configurable for more conjested networks. 5 generally works.
 
 # DotEnv only reads variables as strings. Ensure it is a digit value and convert (or default).
 if not RETRY_DELAY.isdigit():

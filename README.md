@@ -87,6 +87,7 @@ The container supports the following env var as configuration :
 - `NETBOX_URL`, used to access netbox
 - `NETBOX_TOKEN`, token for accessing netbox
 - `VENDORS`, a comma-separated list of vendors to import (defaults to None)
+- `REQUESTS_CA_BUNDLE`, path to a CA_BUNDLE for validation if you are using self-signed certificates(file must be included in the container)
 
 To run :
 
