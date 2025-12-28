@@ -58,10 +58,10 @@ To import only device by APC, for example:
 ./nb-dt-import.py --vendors apc
 ```
 
-`--vendors` can also accept a comma separated list of vendors if you want to import multiple.
+`--vendors` can also accept a comma separated list of vendors if you want to import multiple. And if a space is in the vendor name, use ''.
 
 ```
-./nb-dt-import.py --vendors apc,juniper
+./nb-dt-import.py --vendors apc,juniper,'allied telesis'
 ```
 
 ## Docker build
