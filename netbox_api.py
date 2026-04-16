@@ -23,6 +23,7 @@ class NetBox:
         self.handle = settings.handle
         self.netbox = None
         self.ignore_ssl = settings.IGNORE_SSL_ERRORS
+        self.check_images = settings.CHECK_IMAGES
         self.modules = False
         self.new_filters = False
         self.connect_api()
@@ -59,7 +60,7 @@ class NetBox:
         if version_split[0] >= 4 and version_split[1] >= 1:
             self.new_filters = True
             self.handle.log(f'Netbox version {self.netbox.version} found. Using new filters.')
-    
+
     def get_manufacturers(self):
         return {str(item): item for item in self.netbox.dcim.manufacturers.all()}
 
@@ -142,9 +143,21 @@ class NetBox:
             if self.modules and 'module-bays' in device_type:
                 self.device_types.create_module_bays(device_type['module-bays'], dt.id)
 
-            # Finally, update images if any
             if saved_images:
-                self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
+                if self.check_images:
+                    # Update images if any with existence check
+                    images_to_upload = {}
+                    for img_type, img_path in saved_images.items():
+                        if self.needs_image_update(dt.id, img_type):
+                            images_to_upload[img_type] = img_path
+                        else:
+                            self.handle.log(f'Image {img_type} already exists for {dt.model}, skipping upload')
+
+                    if images_to_upload:
+                        self.device_types.upload_images(self.url, self.token, images_to_upload, dt.id)
+                else:
+                    # Always update images if any
+                    self.device_types.upload_images(self.url, self.token, saved_images, dt.id)
 
     def create_module_types(self, module_types):
         all_module_types = {}
@@ -185,6 +198,21 @@ class NetBox:
             if "front-ports" in curr_mt:
                 self.device_types.create_module_front_ports(curr_mt["front-ports"], module_type_res.id)
 
+    def needs_image_update(self, dt_id: int, image_type: str) -> bool:
+        """Checks what the image needs to be updated"""
+        try:
+            device_type = self.netbox.dcim.device_types.get(dt_id)
+            current_image = getattr(device_type, image_type, None)
+            if not current_image:
+                return True
+
+            return False
+
+        except Exception as e:
+            self.log(f'Error checking image update for {dt_id}: {e}')
+            return True
+
+
 class DeviceTypes:
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
@@ -202,7 +230,7 @@ class DeviceTypes:
 
     def get_power_ports(self, device_type):
         return {str(item): item for item in self.netbox.dcim.power_port_templates.filter(**{'device_type_id' if self.new_filters else 'devicetype_id': device_type})}
-      
+
     def get_rear_ports(self, device_type):
         return {str(item): item for item in self.netbox.dcim.rear_port_templates.filter(**{'device_type_id' if self.new_filters else 'devicetype_id': device_type})}
 
