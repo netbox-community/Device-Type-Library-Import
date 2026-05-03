@@ -56,7 +56,7 @@ class NetBox:
             self.modules = True
 
         # check if version >= 4.1 in order to use new filter names (https://github.com/netbox-community/netbox/issues/15410)
-        if version_split[0] >= 4 and version_split[1] >= 1:
+        if version_split[0] > 4 or (version_split[0] == 4 and version_split[1] >= 1):
             self.new_filters = True
             self.handle.log(f'Netbox version {self.netbox.version} found. Using new filters.')
     
@@ -184,6 +184,8 @@ class NetBox:
                 self.device_types.create_module_rear_ports(curr_mt["rear-ports"], module_type_res.id)
             if "front-ports" in curr_mt:
                 self.device_types.create_module_front_ports(curr_mt["front-ports"], module_type_res.id)
+            if self.modules and "module-bays" in curr_mt:
+                self.device_types.create_module_module_bays(curr_mt["module-bays"], module_type_res.id)
 
 class DeviceTypes:
     def __new__(cls, *args, **kwargs):
@@ -469,6 +471,19 @@ class DeviceTypes:
                                      })
             except pynetbox.RequestError as excep:
                 self.handle.log(f"Error '{excep.error}' creating Module Front Port")
+
+    def create_module_module_bays(self, module_bays, module_type):
+        existing_module_bays = {str(item): item for item in self.netbox.dcim.module_bay_templates.filter(**{'module_type_id' if self.new_filters else 'moduletype_id': module_type})}
+        to_create = self.get_module_type_ports_to_create(module_bays, module_type, existing_module_bays)
+
+        if to_create:
+            try:
+                self.counter.update({'updated':
+                                     self.handle.log_module_ports_created(
+                                         self.netbox.dcim.module_bay_templates.create(to_create), "Module Module Bay")
+                                     })
+            except pynetbox.RequestError as excep:
+                self.handle.log(f"Error '{excep.error}' creating Module Module Bay")
 
     def upload_images(self,baseurl,token,images,device_type):
         '''Upload front_image and/or rear_image for the given device type
